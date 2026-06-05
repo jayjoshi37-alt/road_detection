@@ -1,0 +1,572 @@
+{% set app_name = 'SentryRoad' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Admin - {{ app_name }}{% endblock %}</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e5e7eb;
+      --shadow: 0 18px 40px rgba(15, 23, 42, .08);
+      --shadow-soft: 0 10px 20px rgba(0,0,0,.06);
+      --radius:16px;
+
+      --primary:#1e3a8a;
+      --primary2:#2563eb;
+      --accent:#f59e0b;
+      --danger:#ef4444;
+
+      --sidebar-bg: linear-gradient(180deg, #0b1220 0%, #0f172a 55%, #111827 100%);
+      --sidebar-border: rgba(255,255,255,.08);
+      --sidebar-text: rgba(255,255,255,.90);
+      --sidebar-muted: rgba(255,255,255,.55);
+      --sidebar-hover: rgba(255,255,255,.08);
+      --sidebar-active: rgba(37,99,235,.22);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(37,99,235,.10), transparent 60%),
+                  radial-gradient(900px 500px at 90% 20%, rgba(245,158,11,.12), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      overflow-x:hidden;
+    }
+
+    /* Layout */
+    .layout{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      min-height:100vh;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      position:sticky;
+      top:0;
+      height:100vh;
+      padding:18px 14px;
+      background: var(--sidebar-bg);
+      border-right:1px solid var(--sidebar-border);
+      box-shadow: var(--shadow-soft);
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      z-index:30;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:12px 12px;
+      border-radius:14px;
+      background: rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .brand .logo{
+      width:40px; height:40px;
+      border-radius:12px;
+      display:flex; align-items:center; justify-content:center;
+      background: linear-gradient(135deg, rgba(37,99,235,.95), rgba(245,158,11,.9));
+      box-shadow: 0 10px 25px rgba(0,0,0,.25);
+      color:#fff;
+      font-size:16px;
+    }
+    .brand h1{
+      margin:0;
+      font-size:16px;
+      letter-spacing:.4px;
+      color:var(--sidebar-text);
+      line-height:1.15;
+    }
+    .brand small{
+      display:inline-block;
+      font-size:11px;
+      color: rgba(245,158,11,.95);
+      font-weight:700;
+      margin-left:6px;
+    }
+    .brand .sub{
+      font-size:12px;
+      color:var(--sidebar-muted);
+      margin-top:2px;
+    }
+
+    .admin-card{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px;
+      border-radius:14px;
+      background: rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.07);
+      backdrop-filter: blur(10px);
+    }
+    .avatar{
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      background: linear-gradient(135deg,#f59e0b,#ef4444);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-weight:800;
+      letter-spacing:.4px;
+      box-shadow: 0 12px 25px rgba(0,0,0,.25);
+      flex:0 0 auto;
+    }
+    .admin-card img{
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      object-fit:cover;
+      border:2px solid rgba(255,255,255,.22);
+      flex:0 0 auto;
+    }
+    .admin-info{
+      min-width:0;
+    }
+    .admin-info .name{
+      font-weight:800;
+      color:var(--sidebar-text);
+      font-size:14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .admin-info .role{
+      font-size:12px;
+      color:var(--sidebar-muted);
+      margin-top:2px;
+    }
+
+    /* Side nav */
+    .side-nav{
+      margin-top:2px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      flex:1;
+      overflow:auto;
+      padding-right:4px;
+    }
+    .side-nav::-webkit-scrollbar{ width:6px; }
+    .side-nav::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.15); border-radius:20px; }
+
+    .side-nav h4{
+      margin:10px 10px 6px;
+      font-size:11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--sidebar-muted);
+    }
+
+    .side-nav a{
+      position:relative;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:var(--sidebar-text);
+      text-decoration:none;
+      padding:11px 12px;
+      margin:0 6px;
+      border-radius:12px;
+      transition: .18s ease;
+      border:1px solid transparent;
+    }
+    .side-nav a i{
+      width:20px;
+      opacity:.95;
+      color:#93c5fd;
+    }
+    .side-nav a:hover{
+      background: var(--sidebar-hover);
+      transform: translateX(2px);
+    }
+
+    .side-nav a.active{
+      background: var(--sidebar-active);
+      border-color: rgba(37,99,235,.35);
+      box-shadow: 0 10px 25px rgba(37,99,235,.15);
+    }
+    .side-nav a.active::before{
+      content:"";
+      position:absolute;
+      left:-6px;
+      top:10px;
+      width:4px;
+      height:calc(100% - 20px);
+      border-radius:999px;
+      background: linear-gradient(180deg, rgba(37,99,235,1), rgba(245,158,11,.9));
+    }
+
+    .logout{
+      margin-top:auto;
+      padding-top:8px;
+    }
+    .logout a i{ color:#fca5a5; }
+    .logout a:hover{
+      background: rgba(239,68,68,.14);
+      border-color: rgba(239,68,68,.22);
+    }
+
+    /* Right side container */
+    .page{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+
+    /* Topbar */
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:20;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 18px;
+      background: rgba(255,255,255,.75);
+      border-bottom:1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+
+    .topbar-left{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+
+    .menu-toggle{
+      display:none;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      border-radius:12px;
+      padding:9px 12px;
+      cursor:pointer;
+      font-weight:700;
+      box-shadow: 0 10px 18px rgba(0,0,0,.05);
+    }
+    .menu-toggle:hover{ transform: translateY(-1px); }
+
+    .search{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background:#fff;
+      border:1px solid var(--border);
+      padding:10px 12px;
+      border-radius:14px;
+      box-shadow: 0 10px 18px rgba(0,0,0,.04);
+      min-width:320px;
+      max-width:520px;
+    }
+    .search i{ color:#94a3b8; }
+    .search input{
+      border:none;
+      outline:none;
+      background:transparent;
+      width:100%;
+      font-size:14px;
+    }
+
+    .actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex:0 0 auto;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:none;
+      cursor:pointer;
+      text-decoration:none;
+      font-weight:800;
+      border-radius:14px;
+      padding:10px 14px;
+      transition:.18s ease;
+      user-select:none;
+    }
+    .btn i{ font-size:14px; }
+
+    .btn-outline{
+      background:#fff;
+      color:var(--primary2);
+      border:1px solid rgba(37,99,235,.25);
+      box-shadow: 0 10px 18px rgba(0,0,0,.04);
+    }
+    .btn-outline:hover{
+      transform: translateY(-1px);
+      border-color: rgba(37,99,235,.45);
+    }
+
+    .btn-primary{
+      background: linear-gradient(135deg, var(--primary2), #1d4ed8);
+      color:#fff;
+      box-shadow: 0 14px 30px rgba(37,99,235,.22);
+    }
+    .btn-primary:hover{
+      transform: translateY(-1px);
+      filter: brightness(1.03);
+    }
+
+    /* Main content */
+    .main{
+      padding:18px;
+    }
+
+    .flash-wrap{ margin-bottom:12px; }
+    .flash{
+      background: #ecfeff;
+      border:1px solid #a5f3fc;
+      color:#0e7490;
+      padding:12px 14px;
+      border-radius:14px;
+      box-shadow: 0 10px 20px rgba(0,0,0,.04);
+      margin-bottom:10px;
+      font-weight:600;
+    }
+
+    /* Content helpers for dashboard cards */
+    .cards{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap:16px;
+    }
+
+    .card{
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:16px;
+    }
+
+    .card-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
+    }
+    .card h3{
+      font-size:13px;
+      color:var(--muted);
+      margin:0;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .metric{
+      font-size:28px;
+      font-weight:900;
+      color:var(--text);
+      margin-top:6px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      font-size:12px;
+      font-weight:800;
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(37,99,235,.10);
+      color: var(--primary2);
+      border:1px solid rgba(37,99,235,.18);
+      white-space:nowrap;
+    }
+
+    .panel{
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:18px;
+    }
+    .panel h2{
+      margin:0 0 10px;
+      font-size:18px;
+      color:var(--text);
+      letter-spacing:.2px;
+    }
+
+    /* Mobile sidebar overlay */
+    .overlay{
+      display:none;
+      position:fixed;
+      inset:0;
+      background: rgba(15,23,42,.45);
+      z-index:25;
+    }
+
+    @media(max-width: 980px){
+      .layout{ grid-template-columns:1fr; }
+      .sidebar{
+        position:fixed;
+        left:0;
+        top:0;
+        transform: translateX(-110%);
+        transition: transform .25s ease;
+        width: 280px;
+      }
+      .sidebar.open{ transform: translateX(0); }
+      .overlay.show{ display:block; }
+      .menu-toggle{ display:inline-flex; }
+      .search{ min-width: 180px; max-width: 320px; }
+      .main{ padding:14px; }
+    }
+
+    @media(max-width: 520px){
+      .search{ display:none; }
+      .actions a.btn-outline{ display:none; }
+    }
+  </style>
+
+  {% block head_extra %}{% endblock %}
+</head>
+
+<body>
+  <!-- Mobile overlay -->
+  <div class="overlay" id="overlay"></div>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="logo"><i class="fas fa-road"></i></div>
+        <div style="min-width:0">
+          <h1>{{ app_name }} <small>Admin</small></h1>
+          <div class="sub">Control Center Dashboard</div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        {% if admin_avatar_url %}
+          <img src="{{ admin_avatar_url }}" alt="Admin Avatar" />
+        {% else %}
+          <div class="avatar">A</div>
+        {% endif %}
+        <div class="admin-info">
+          <div class="name">{{ admin_username or 'admin' }}</div>
+          <div class="role">Administrator</div>
+        </div>
+      </div>
+
+      <nav class="side-nav">
+        <h4>Overview</h4>
+        <a href="/admin/dashboard"><i class="fas fa-gauge"></i>Dashboard</a>
+        <a href="/admin/users"><i class="fas fa-users"></i>Users</a>
+        <a href="/admin/reports"><i class="fas fa-file-alt"></i>Reports</a>
+        <a href="/admin/settings"><i class="fas fa-cog"></i>Settings</a>
+        <a href="/admin/profile"><i class="fas fa-id-badge"></i>Profile</a>
+
+        <div class="logout">
+          <a href="/admin/logout"><i class="fas fa-sign-out-alt"></i>Logout</a>
+        </div>
+      </nav>
+    </aside>
+
+    <section class="page">
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" id="menuBtn">
+            <i class="fas fa-bars"></i> Menu
+          </button>
+
+          <div class="search">
+            <i class="fas fa-magnifying-glass"></i>
+            <input type="text" placeholder="Search..." aria-label="Search" />
+          </div>
+        </div>
+
+        <div class="actions">
+          <a class="btn btn-outline" href="/"><i class="fas fa-home"></i>Home</a>
+          <a class="btn btn-primary" href="/admin/dashboard"><i class="fas fa-gauge"></i>Dashboard</a>
+        </div>
+      </div>
+
+      <main class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-wrap">
+            {% for category, message in messages %}
+              <div class="flash">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </section>
+  </div>
+
+  <script>
+    const sidebar = document.getElementById("sidebar");
+    const menuBtn = document.getElementById("menuBtn");
+    const overlay = document.getElementById("overlay");
+
+    function openSidebar(){
+      sidebar.classList.add("open");
+      overlay.classList.add("show");
+    }
+    function closeSidebar(){
+      sidebar.classList.remove("open");
+      overlay.classList.remove("show");
+    }
+
+    if(menuBtn){
+      menuBtn.addEventListener("click", () => {
+        if(sidebar.classList.contains("open")) closeSidebar();
+        else openSidebar();
+      });
+    }
+    if(overlay){
+      overlay.addEventListener("click", closeSidebar);
+    }
+
+    // Active link highlight
+    (function(){
+      try{
+        const path = window.location.pathname || "";
+        const links = document.querySelectorAll(".side-nav a");
+        let matched = false;
+
+        links.forEach(a => {
+          a.classList.remove("active");
+          const href = a.getAttribute("href") || "";
+          if(!matched && href && path.startsWith(href)){
+            a.classList.add("active");
+            matched = true;
+          }
+        });
+
+        if(!matched){
+          const dash = document.querySelector('.side-nav a[href="/admin/dashboard"]');
+          if(dash) dash.classList.add("active");
+        }
+      }catch(e){}
+    })();
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

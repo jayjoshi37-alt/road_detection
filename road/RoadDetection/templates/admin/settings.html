@@ -1,0 +1,33 @@
+{% extends 'admin/base.html' %}
+{% block title %}Settings - SentryRoad Admin{% endblock %}
+{% block content %}
+  <section>
+    <h2 style="margin:0 0 14px;">Settings</h2>
+    <div class="cards">
+      <div class="card" style="grid-column:span 12;">
+        <div class="panel">
+          <h2>Platform Settings</h2>
+          <p style="color:#6b7280;margin-top:6px;">Configure application preferences here. Wire to backend as needed.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+            <div class="panel" style="box-shadow:none;border-color:#eef2f7;">
+              <h3 style="margin:0 0 8px;font-size:14px;color:#6b7280">General</h3>
+              <label style="display:flex;align-items:center;gap:8px;margin:8px 0;">
+                <input type="checkbox" checked /> Enable notifications
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;margin:8px 0;">
+                <input type="checkbox" /> Maintenance mode
+              </label>
+            </div>
+            <div class="panel" style="box-shadow:none;border-color:#eef2f7;">
+              <h3 style="margin:0 0 8px;font-size:14px;color:#6b7280">Data</h3>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <a class="btn btn-outline" href="#"><i class="fas fa-database"></i> Backup</a>
+                <a class="btn btn-outline" href="#"><i class="fas fa-trash"></i> Clear Cache</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

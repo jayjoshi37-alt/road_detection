@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Road Damage Detection System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+
+    <!-- Toast Popup (Flash Messages) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="toast-container" id="toastContainer">
+        {% for category, message in messages %}
+        <div class="toast toast-{{ category }}">
+            <div class="toast-icon">
+                {% if category == "success" %}
+                    <i class="fas fa-check-circle"></i>
+                {% elif category == "error" %}
+                    <i class="fas fa-times-circle"></i>
+                {% elif category == "warning" %}
+                    <i class="fas fa-exclamation-triangle"></i>
+                {% else %}
+                    <i class="fas fa-info-circle"></i>
+                {% endif %}
+            </div>
+            <div class="toast-message">{{ message }}</div>
+            <button class="toast-close" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <i class="fas fa-road"></i>
+                <h1>Sentry<span>Road</span> <small style="font-size:12px;color:#ffc107;margin-left:6px;">Admin</small></h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/#services">Services</a></li>
+                    <li><a href="/#technology">Technology</a></li>
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="auth-buttons">
+                <a href="/login" class="btn btn-outline">User Login</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="login-container">
+        <div class="image-section">
+            <div class="image-overlay">
+                <h2>Administrator Access</h2>
+                <p>Manage users, monitor activity, and oversee the Road Damage Detection platform securely.</p>
+            </div>
+        </div>
+        <div class="form-section">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Admin Sign In</h2>
+                    <p>Enter your admin credentials to continue</p>
+                </div>
+
+                <form id="adminLoginForm" method="post" action="/admin/login">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" class="form-control" placeholder="Enter admin username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="Enter password" required>
+                    </div>
+                    <button type="submit" class="btn-login">Sign In</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Toast popup style */
+        .toast-container{
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+        }
+        .toast{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 280px;
+            max-width: 380px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 12px 14px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+            border-left: 6px solid #2563eb;
+            animation: slideIn 0.3s ease;
+        }
+        .toast-success{ border-left-color: #22c55e; }
+        .toast-error{ border-left-color: #ef4444; }
+        .toast-warning{ border-left-color: #f59e0b; }
+        .toast-info{ border-left-color: #3b82f6; }
+
+        .toast-icon i{ font-size: 18px; }
+        .toast-message{ flex: 1; font-size: 14px; color: #111827; }
+        .toast-close{
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        @keyframes slideIn{
+            from{ transform: translateX(50px); opacity: 0; }
+            to{ transform: translateX(0); opacity: 1; }
+        }
+    </style>
+
+    <script>
+        // Auto remove toast after 4 seconds
+        setTimeout(() => {
+            const tc = document.getElementById("toastContainer");
+            if(tc) tc.remove();
+        }, 4000);
+
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value;
+            if (!u || !p) {
+                e.preventDefault();
+                alert('Please enter username and password.');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Road Damage Detection System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../static/css/style.css">
+   
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <i class="fas fa-road"></i>
+                <h1>Sentry<span>Road</span></h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/#services">Services</a></li>
+                    <li><a href="/#technology">Technology</a></li>
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="auth-buttons">
+               <a href="/login" class="btn btn-outline">Login</a>
+                <a href="/register" class="btn btn-primary"> Register</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="registration-container">
+        <div class="image-section">
+            <div class="image-overlay">
+                <h2>Join Our Road Safety Mission</h2>
+                <p>Become part of our community working towards safer roads worldwide. Access our advanced detection tools and contribute to better infrastructure management.</p>
+            </div>
+        </div>
+        <div class="form-section">
+            <div class="form-container" style="padding-top: 460px;">
+                <div class="form-header">
+                    <h2>Create Account</h2>
+                    <p>Sign up to get started with SentryRoad</p>
+                </div>
+                <form id="registrationForm" method="post" action="/register">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" name="txtfirst_name" class="form-control" placeholder="Enter your first name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" name="txtlast_name" class="form-control" placeholder="Enter your last name" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="txtemail" class="form-control" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="organization">Organization (Optional)</label>
+                        <input type="text" id="organization" name="txtorganization" class="form-control" placeholder="Enter your organization">
+                    </div>
+                    <div class="form-group">
+                        <label for="userType">Account Type</label>
+                        <select id="userType" name="txtuser_type" class="form-control" required>
+                            <option value="" disabled selected>Select your account type</option>
+                            <option value="municipality">Municipality/Government</option>
+                            <option value="contractor">Contractor</option>
+                            <option value="engineer">Engineer</option>
+                            <option value="researcher">Researcher</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="txtpassword" class="form-control" placeholder="Create a password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <input type="password" id="confirmPassword" name="txtconfirm_password" class="form-control" placeholder="Confirm your password" required>
+                        </div>
+                    </div>
+                    <div class="terms">
+                        <input type="checkbox" id="agreeTerms" required>
+                        <label for="agreeTerms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+                    </div>
+                    <button type="submit" class="btn-register">Create Account</button>
+                </form>
+                <div class="social-register">
+                    <p>Or sign up with</p>
+                    <div class="social-buttons">
+                        <button class="social-btn">
+                            <i class="fab fa-google"></i> Google
+                        </button>
+                        <button class="social-btn">
+                            <i class="fab fa-github"></i> GitHub
+                        </button>
+                    </div>
+                </div>
+                <div class="login-link">
+                    <p>Already have an account? <a href="/login">Sign in here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+            }
+        });
+    </script>
+</body>
+</html>

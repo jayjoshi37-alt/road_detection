@@ -1,0 +1,1249 @@
+{% extends 'admin/base.html' %}
+{% block title %}Reports - SentryRoad Admin{% endblock %}
+
+{% block head_extra %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#0b1220;
+    --card:#ffffff;
+    --muted:#64748b;
+    --text:#0f172a;
+    --border:#e5e7eb;
+    --shadow:0 18px 45px rgba(2,6,23,.10);
+    --shadow2:0 10px 24px rgba(2,6,23,.08);
+    --radius:18px;
+  }
+
+  /* Page wrapper inside your panel */
+  .reports-wrap{
+    padding: 4px;
+  }
+
+  .page-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom: 14px;
+  }
+
+  .page-title{
+    margin:0;
+    font-size:22px;
+    font-weight:900;
+    letter-spacing:.2px;
+    color:var(--text);
+  }
+
+  .page-sub{
+    margin:6px 0 0;
+    color:var(--muted);
+    font-weight:600;
+    font-size:13px;
+  }
+
+  /* Toolbar */
+  .toolbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .tool-input{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 12px;
+    border-radius: 14px;
+    border:1px solid var(--border);
+    background:#fff;
+    box-shadow: var(--shadow2);
+    min-width: 280px;
+  }
+  .tool-input i{ color:#94a3b8; }
+  .tool-input input{
+    border:none;
+    outline:none;
+    width:100%;
+    font-weight:700;
+    color:#0f172a;
+    background:transparent;
+  }
+
+  .tool-select{
+    border-radius: 14px;
+    border:1px solid var(--border);
+    background:#fff;
+    padding:10px 12px;
+    font-weight:800;
+    color:#0f172a;
+    box-shadow: var(--shadow2);
+  }
+
+  .count-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 12px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:#fff;
+    font-weight:900;
+    color:#0f172a;
+    box-shadow: var(--shadow2);
+  }
+  .count-pill span{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:30px;
+    height:26px;
+    border-radius:999px;
+    padding:0 10px;
+    background:rgba(37,99,235,.12);
+    border:1px solid rgba(37,99,235,.18);
+    color:#2563eb;
+    font-size:12px;
+    font-weight:900;
+  }
+
+  /* Report cards */
+  .report-card{
+    border:1px solid var(--border);
+    border-radius: var(--radius);
+    overflow:hidden;
+    background: var(--card);
+    box-shadow: var(--shadow2);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    height:100%;
+  }
+  .report-card:hover{
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+    border-color:#d1d5db;
+  }
+
+  .thumb-wrap{
+    position:relative;
+    background:#f1f5f9;
+  }
+
+  .report-thumb{
+    width:100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    display:block;
+  }
+
+  .thumb-overlay{
+    position:absolute;
+    inset:0;
+    background: linear-gradient(to top, rgba(2,6,23,.60), rgba(2,6,23,0) 62%);
+  }
+
+  .status-float{
+    position:absolute;
+    top:12px;
+    right:12px;
+    padding:.35rem .6rem;
+    border-radius:999px;
+    background:rgba(255,255,255,.92);
+    border:1px solid rgba(255,255,255,.7);
+    box-shadow:0 12px 25px rgba(0,0,0,.18);
+    font-weight:900;
+    font-size:12px;
+    color:#0f172a;
+    backdrop-filter: blur(10px);
+  }
+
+  .report-body{
+    padding: 14px 14px 12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .report-title{
+    font-size:16px;
+    font-weight:900;
+    color:#0f172a;
+    margin:0;
+    line-height:1.15;
+  }
+
+  .report-subline{
+    color: var(--muted);
+    font-weight:700;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .meta-row{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+
+  .chip{
+    font-size:12px;
+    padding:.35rem .6rem;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:#f8fafc;
+    color:#334155;
+    font-weight:900;
+  }
+
+  .chip-cat{
+    background:rgba(37,99,235,.10);
+    border-color:rgba(37,99,235,.18);
+    color:#2563eb;
+  }
+
+  .chip-low{
+    background:rgba(16,185,129,.10);
+    border-color:rgba(16,185,129,.18);
+    color:#059669;
+  }
+  .chip-medium{
+    background:rgba(245,158,11,.12);
+    border-color:rgba(245,158,11,.22);
+    color:#b45309;
+  }
+  .chip-high{
+    background:rgba(239,68,68,.10);
+    border-color:rgba(239,68,68,.18);
+    color:#ef4444;
+  }
+
+  .chip-status-new{
+    background:rgba(99,102,241,.10);
+    border-color:rgba(99,102,241,.18);
+    color:#4f46e5;
+  }
+  .chip-status-in-progress{
+    background:rgba(14,165,233,.10);
+    border-color:rgba(14,165,233,.18);
+    color:#0284c7;
+  }
+  .chip-status-resolved{
+    background:rgba(34,197,94,.10);
+    border-color:rgba(34,197,94,.18);
+    color:#16a34a;
+  }
+  .chip-status-closed{
+    background:rgba(100,116,139,.12);
+    border-color:rgba(100,116,139,.22);
+    color:#475569;
+  }
+
+  .report-location{
+    color:#475569;
+    font-weight:700;
+    font-size:13px;
+    margin:0;
+  }
+
+  .report-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:auto;
+  }
+
+  .report-actions{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    gap:8px;
+    min-width: 220px;
+  }
+
+  .prio-wrap{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .prio-select{
+    border-radius:999px;
+    border:1px solid #cbd5e1;
+    background:#fff;
+    padding:.25rem .6rem;
+    font-weight:900;
+    font-size:12px;
+    color:#0f172a;
+  }
+
+  @media (max-width: 420px){
+    .report-footer{ align-items:flex-start; }
+    .report-actions{ justify-content:flex-start; min-width: 0; }
+    .prio-wrap{ width:100%; }
+    .prio-select{ flex:1; }
+  }
+
+  .id-mini{
+    color:#94a3b8;
+    font-weight:900;
+    font-size:12px;
+  }
+
+  .btn-pill{
+    border-radius:999px !important;
+    font-weight:900;
+  }
+
+  .thumb-grid{
+    display:grid;
+    grid-template-columns: repeat(3,1fr);
+    gap:.5rem;
+  }
+  .thumb{
+    display:block;
+    width:100%;
+    aspect-ratio:16/9;
+    object-fit:cover;
+    border-radius:12px;
+    border:1px solid var(--border);
+  }
+  .thumb-more{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1px dashed #cbd5e1;
+    border-radius:12px;
+    color:#475569;
+    font-weight:900;
+    font-size:12px;
+    background:#fff;
+  }
+
+  .empty-state{
+    border: 1px dashed #cbd5e1;
+    border-radius: 18px;
+    padding: 2rem;
+    text-align: center;
+    color: #475569;
+    background: #ffffff;
+    box-shadow: var(--shadow2);
+  }
+
+  /* Premium Modal */
+  .modal-content{
+    border-radius: 20px;
+    border:1px solid rgba(255,255,255,.55);
+    box-shadow: 0 30px 80px rgba(2,6,23,.25);
+    overflow:hidden;
+  }
+
+  .modal-header{
+    background:
+      radial-gradient(900px 240px at 10% 0%, rgba(37,99,235,.14), transparent 55%),
+      radial-gradient(700px 220px at 90% 40%, rgba(245,158,11,.14), transparent 55%),
+      #ffffff;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-title{
+    font-weight:900;
+    color:#0f172a;
+  }
+
+  .modal-body{
+    background:
+      radial-gradient(900px 240px at 10% 0%, rgba(37,99,235,.08), transparent 55%),
+      radial-gradient(700px 220px at 90% 40%, rgba(245,158,11,.08), transparent 55%),
+      #ffffff;
+  }
+
+  .info-box{
+    border:1px solid var(--border);
+    border-radius: 18px;
+    background:#fff;
+    box-shadow: var(--shadow2);
+    padding: 14px;
+  }
+
+  .details-dl dt{
+    font-weight:900;
+    color:#334155;
+    font-size:13px;
+  }
+  .details-dl dd{
+    margin-bottom:.6rem;
+    color:#0f172a;
+    font-weight:800;
+    font-size:13px;
+  }
+
+  .section-title{
+    font-weight:900;
+    font-size:14px;
+    color:#0f172a;
+    margin:0 0 8px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-title i{ color:#2563eb; }
+
+  .gallery-img{
+    width:100%;
+    border-radius:16px;
+    border:1px solid var(--border);
+    object-fit:cover;
+    aspect-ratio: 16/10;
+    box-shadow: var(--shadow2);
+  }
+
+  .processed-card{
+    border:1px solid var(--border);
+    border-radius: 18px;
+    overflow:hidden;
+    background:#fff;
+    box-shadow: var(--shadow2);
+  }
+  .processed-card img{
+    width:100%;
+    display:block;
+    aspect-ratio: 16/10;
+    object-fit:cover;
+  }
+  .processed-meta{
+    padding: 10px 12px;
+    font-size:13px;
+    color:#0f172a;
+    font-weight:800;
+  }
+  .processed-summary{
+    border:1px solid var(--border);
+    border-radius: 18px;
+    background:#fff;
+    box-shadow: var(--shadow2);
+    padding: 12px 14px;
+  }
+  .processed-summary .processed-meta{
+    padding: 0;
+  }
+  .processed-meta div{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding: 3px 0;
+    border-bottom: 1px dashed #e5e7eb;
+  }
+  .processed-meta div:last-child{
+    border-bottom:none;
+  }
+  .processed-meta span{
+    color:#64748b;
+    font-weight:800;
+  }
+
+  @media print {
+    body { background:#fff !important; }
+    .sidebar, .topbar, .logout, .btn, .modal-footer { display:none !important; }
+    .modal { position: static; }
+    .modal-dialog { max-width: 100% !important; }
+    .modal-content { border: none; box-shadow: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="panel reports-wrap">
+
+  <!-- Header -->
+  <div class="page-head">
+    <div>
+      <h2 class="page-title">All Complaints</h2>
+      <p class="page-sub">
+        Premium overview of all user complaints with images, location & detection results.
+      </p>
+    </div>
+
+    <div class="toolbar">
+      <div class="tool-input">
+        <i class="fas fa-magnifying-glass"></i>
+        <input id="searchBox" type="text" placeholder="Search title, user, category, location..." />
+      </div>
+
+      <select id="filterStatus" class="tool-select">
+        <option value="">All Status</option>
+        <option value="new">New</option>
+        <option value="in progress">In Progress</option>
+        <option value="resolved">Resolved</option>
+        <option value="closed">Closed</option>
+      </select>
+
+      <select id="filterPriority" class="tool-select">
+        <option value="">All Priority</option>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+
+      <div class="count-pill">
+        <i class="fas fa-layer-group" style="color:#2563eb;"></i>
+        Total <span id="countTotal">{{ complaints|length if complaints else 0 }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reply Modal -->
+  <div class="modal fade" id="replyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title">Reply to Complaint</h5>
+            <div class="text-muted small" id="replyTitle"></div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <form id="replyForm">
+          <div class="modal-body">
+            <input type="hidden" id="replyComplaintId" name="complaint_id" />
+
+            <div class="mb-3">
+              <label for="replyMessage" class="form-label fw-bold">Your reply</label>
+              <textarea id="replyMessage" name="message" class="form-control" rows="4" placeholder="Type your response..." required></textarea>
+            </div>
+
+            <div class="row g-2">
+              <div class="col-12 col-md-6">
+                <label for="replyStatus" class="form-label fw-bold">Update status (optional)</label>
+                <select id="replyStatus" name="status" class="form-select">
+                  <option value="">No change</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
+                  <option value="Closed">Closed</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="replyImages" class="form-label fw-bold">Attach images (optional)</label>
+                <input id="replyImages" name="images" class="form-control" type="file" accept="image/*" multiple>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <div class="small text-muted mb-2 fw-bold">Preview</div>
+              <div class="row g-2" id="replyPreview"></div>
+            </div>
+
+            <div class="alert alert-success py-2 px-3 d-none mt-3" id="replySuccess">Reply sent.</div>
+            <div class="alert alert-danger py-2 px-3 d-none mt-3" id="replyError">Failed to send reply.</div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary btn-pill" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-pill">
+              <i class="fas fa-paper-plane me-1"></i>Send Reply
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% if complaints and complaints|length > 0 %}
+  <div class="row g-3" id="reportsGrid">
+    {% for c in complaints %}
+    {% set st = (c.status or 'New')|lower %}
+    {% set pr = (c.priority or 'low')|lower %}
+    <div class="col-12 col-md-6 col-lg-4 report-item"
+         data-title="{{ (c.title or '')|lower }}"
+         data-user="{{ (c.user_name or '')|lower }} {{ (c.user_email or '')|lower }}"
+         data-category="{{ (c.category or '')|lower }}"
+         data-location="{{ (c.location_text or '')|lower }}"
+         data-status="{{ st }}"
+         data-priority="{{ pr }}"
+    >
+      <div class="report-card">
+
+        {% if c.images and c.images|length > 0 %}
+        <div class="thumb-wrap">
+          <img class="report-thumb" src="{{ url_for('static', filename='uploads/complaints/' ~ c.id ~ '/' ~ c.images[0]) }}" alt="thumbnail">
+          <div class="thumb-overlay"></div>
+          <span class="status-float">{{ c.status or 'New' }}</span>
+        </div>
+        {% else %}
+        <div class="thumb-wrap">
+          <div style="aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; color:#64748b; font-weight:900;">
+            <i class="fas fa-image me-2"></i>No Image
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="report-body">
+          <div>
+            <h3 class="report-title">{{ c.title }}</h3>
+            <div class="report-subline">
+              <span><i class="fas fa-user me-1"></i>{{ c.user_name }}</span>
+              <span class="text-muted small fw-bold">{{ c.created_at }}</span>
+            </div>
+            <div class="text-muted small fw-bold">
+              <i class="fas fa-envelope me-1"></i>{{ c.user_email }}
+            </div>
+          </div>
+
+          <div class="meta-row">
+            <span class="chip chip-cat">{{ c.category }}</span>
+
+            {% if pr == 'low' %}
+              <span class="chip chip-low"><i class="fas fa-signal me-1"></i>Low</span>
+            {% elif pr == 'medium' %}
+              <span class="chip chip-medium"><i class="fas fa-signal me-1"></i>Medium</span>
+            {% else %}
+              <span class="chip chip-high"><i class="fas fa-signal me-1"></i>High</span>
+            {% endif %}
+
+            {% set stkey = st|replace(' ', '-') %}
+            <span class="chip
+              {% if stkey == 'new' %}chip-status-new
+              {% elif stkey == 'in-progress' %}chip-status-in-progress
+              {% elif stkey == 'resolved' %}chip-status-resolved
+              {% else %}chip-status-closed{% endif %}">
+              {{ c.status or 'New' }}
+            </span>
+          </div>
+
+          {% if c.location_text %}
+          <p class="report-location">
+            <i class="fas fa-location-dot me-1 text-danger"></i>{{ c.location_text }}
+          </p>
+          {% endif %}
+
+          {% if c.images and c.images|length > 1 %}
+          <div class="thumb-grid">
+            {% set maxThumb = 3 %}
+            {% for img in c.images[1:maxThumb] %}
+            <img class="thumb" src="{{ url_for('static', filename='uploads/complaints/' ~ c.id ~ '/' ~ img) }}" alt="thumb">
+            {% endfor %}
+            {% if c.images|length > maxThumb %}
+            <div class="thumb-more">+{{ c.images|length - maxThumb }}</div>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <div class="report-footer">
+            <span class="id-mini"><i class="fas fa-hashtag me-1"></i>ID: {{ c.id }}</span>
+
+            <div class="report-actions">
+              <div class="prio-wrap">
+                <select class="prio-select" data-priority-select data-id="{{ c.id }}" aria-label="Set priority">
+                  <option value="low" {% if pr == 'low' %}selected{% endif %}>Low</option>
+                  <option value="medium" {% if pr == 'medium' %}selected{% endif %}>Medium</option>
+                  <option value="high" {% if pr == 'high' %}selected{% endif %}>High</option>
+                </select>
+                <button class="btn btn-sm btn-outline-primary btn-pill" data-set-priority data-id="{{ c.id }}">
+                  <i class="fas fa-flag me-1"></i>Priority
+                </button>
+              </div>
+
+              <button
+                class="btn btn-sm btn-outline-secondary btn-pill"
+                data-bs-toggle="modal"
+                data-bs-target="#replyModal"
+                data-id="{{ c.id }}"
+                data-title="{{ c.title }}"
+              >
+                <i class="fas fa-reply me-1"></i>Reply
+              </button>
+
+              <button
+                class="btn btn-sm btn-primary btn-pill"
+                data-bs-toggle="modal"
+                data-bs-target="#complaintModal"
+                data-id="{{ c.id }}"
+                data-title="{{ c.title }}"
+                data-category="{{ c.category }}"
+                data-priority="{{ c.priority|title }}"
+                data-status="{{ c.status or 'New' }}"
+                data-created="{{ c.created_at }}"
+                data-user="{{ c.user_name }}"
+                data-email="{{ c.user_email }}"
+                data-location="{{ c.location_text or '' }}"
+                data-description="{{ (c.description or '')|e }}"
+                data-contact="{{ c.contact or '' }}"
+                data-latitude="{{ c.latitude or '' }}"
+                data-longitude="{{ c.longitude or '' }}"
+                data-images='{{ c.images|tojson }}'
+                data-processed='{{ c.processed_images|tojson }}'
+              >
+                <i class="fas fa-eye me-1"></i>View
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="mb-2"><i class="fas fa-inbox fa-lg"></i></div>
+      <div class="fw-bold">No complaints found.</div>
+      <div class="small text-muted mt-1">When users submit complaints, they will appear here.</div>
+    </div>
+  {% endif %}
+
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<!-- Complaint View Modal -->
+<div class="modal fade" id="complaintModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="modalTitle">Complaint</h5>
+          <div class="text-muted small fw-bold" id="modalUser"></div>
+        </div>
+        <div class="d-flex align-items-center gap-10">
+          <small class="text-muted fw-bold" id="modalCid"></small>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="d-flex flex-wrap gap-2 mb-3" id="modalMeta"></div>
+
+        <div class="row g-3">
+          <!-- Left -->
+          <div class="col-12 col-lg-6">
+            <div class="info-box">
+              <div class="section-title"><i class="fas fa-circle-info"></i>Report Details</div>
+              <dl class="row details-dl mb-0" id="modalDetails"></dl>
+            </div>
+
+            <div class="info-box mt-3">
+              <div class="section-title"><i class="fas fa-map-location-dot"></i>Location</div>
+              <div id="modalLocation"></div>
+              <div id="modalCoordinates" class="mt-1"></div>
+
+              <div class="ratio ratio-16x9 border rounded-4 mt-2" id="modalMapWrapper" style="display:none; overflow:hidden;">
+                <iframe id="modalMap" src="" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right -->
+          <div class="col-12 col-lg-6">
+            <div class="info-box">
+              <div class="section-title"><i class="fas fa-align-left"></i>Description</div>
+              <div id="modalDescription"></div>
+
+              <div class="mt-3" id="modalContact"></div>
+            </div>
+
+            <div class="info-box mt-3">
+              <div class="section-title"><i class="fas fa-images"></i>Uploaded Images</div>
+              <div class="row g-2" id="modalGallery"></div>
+              <div class="text-muted small fw-bold" id="modalNoImages" style="display:none">No images attached.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box mt-3">
+          <div class="section-title"><i class="fas fa-microscope"></i>Processed / Detection Results</div>
+          <div class="row g-3" id="modalProcessedGallery"></div>
+          <div id="modalProcessedSummary" class="processed-summary mt-3" style="display:none;"></div>
+          <div class="text-muted small fw-bold" id="modalNoProcessed" style="display:none">No processed images available.</div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <a id="modalMapsLink" class="btn btn-outline-secondary btn-pill" href="#" target="_blank" rel="noopener" style="display:none">
+          <i class="fas fa-map-location-dot me-1"></i>Open in Maps
+        </a>
+        <button type="button" class="btn btn-primary btn-pill" id="modalExportPdf">
+          <i class="fas fa-file-pdf me-1"></i>Export PDF
+        </button>
+        <button type="button" class="btn btn-outline-primary btn-pill" onclick="window.print()">
+          <i class="fas fa-print me-1"></i>Print
+        </button>
+        <button type="button" class="btn btn-secondary btn-pill" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------------------------
+  // Client-side Search & Filter
+  // ---------------------------
+  const searchBox = document.getElementById("searchBox");
+  const filterStatus = document.getElementById("filterStatus");
+  const filterPriority = document.getElementById("filterPriority");
+  const reportItems = Array.from(document.querySelectorAll(".report-item"));
+  const countTotal = document.getElementById("countTotal");
+
+  function applyFilters(){
+    const q = (searchBox?.value || "").trim().toLowerCase();
+    const st = (filterStatus?.value || "").trim().toLowerCase();
+    const pr = (filterPriority?.value || "").trim().toLowerCase();
+
+    let visible = 0;
+
+    reportItems.forEach(item => {
+      const hay = [
+        item.dataset.title || "",
+        item.dataset.user || "",
+        item.dataset.category || "",
+        item.dataset.location || ""
+      ].join(" ");
+
+      const itemStatus = (item.dataset.status || "").toLowerCase();
+      const itemPriority = (item.dataset.priority || "").toLowerCase();
+
+      const okSearch = !q || hay.includes(q);
+      const okStatus = !st || itemStatus === st;
+      const okPrio = !pr || itemPriority === pr;
+
+      const show = okSearch && okStatus && okPrio;
+      item.style.display = show ? "" : "none";
+      if(show) visible++;
+    });
+
+    if(countTotal) countTotal.textContent = visible;
+  }
+
+  if(searchBox) searchBox.addEventListener("input", applyFilters);
+  if(filterStatus) filterStatus.addEventListener("change", applyFilters);
+  if(filterPriority) filterPriority.addEventListener("change", applyFilters);
+
+  // ---------------------------
+  // View Modal Data Binding
+  // ---------------------------
+  const modalEl = document.getElementById('complaintModal');
+  if (modalEl) {
+    modalEl.addEventListener('show.bs.modal', function (event) {
+      const btn = event.relatedTarget;
+      if (!btn) return;
+
+      const title = btn.getAttribute('data-title') || 'Complaint';
+      const category = btn.getAttribute('data-category') || '';
+      const priority = btn.getAttribute('data-priority') || '';
+      const status = btn.getAttribute('data-status') || '';
+      const created = btn.getAttribute('data-created') || '';
+      const user = btn.getAttribute('data-user') || '';
+      const email = btn.getAttribute('data-email') || '';
+      const location = btn.getAttribute('data-location') || '';
+      const description = btn.getAttribute('data-description') || '';
+      const contact = btn.getAttribute('data-contact') || '';
+      const cid = btn.getAttribute('data-id') || '';
+      const lat = btn.getAttribute('data-latitude') || '';
+      const lng = btn.getAttribute('data-longitude') || '';
+
+      let images = [];
+      try { images = JSON.parse(btn.getAttribute('data-images') || '[]'); } catch(e) { images = []; }
+
+      let processed = [];
+      try { processed = JSON.parse(btn.getAttribute('data-processed') || '[]'); } catch(e) { processed = []; }
+
+      modalEl.querySelector('#modalTitle').textContent = title;
+      modalEl.querySelector('#modalUser').innerHTML = `<i class="fas fa-user me-1"></i>${user} ${email ? `<span class="text-muted">(${email})</span>` : ''}`;
+
+      const cidEl = modalEl.querySelector('#modalCid');
+      if (cidEl) cidEl.textContent = cid ? `#${cid}` : '';
+
+      // meta chips
+      const metaEl = modalEl.querySelector('#modalMeta');
+      if(metaEl){
+        metaEl.innerHTML = `
+          <span class="chip chip-cat">${category}</span>
+          <span class="chip ${priority.toLowerCase() === 'high' ? 'chip-high' : (priority.toLowerCase() === 'medium' ? 'chip-medium' : 'chip-low')}">
+            <i class="fas fa-signal me-1"></i>${priority}
+          </span>
+          <span class="chip ${
+            status.toLowerCase() === 'new' ? 'chip-status-new' :
+            (status.toLowerCase() === 'in progress' ? 'chip-status-in-progress' :
+            (status.toLowerCase() === 'resolved' ? 'chip-status-resolved' : 'chip-status-closed'))
+          }">${status}</span>
+          <span class="chip" style="background:#fff; color:#475569;">
+            <i class="fas fa-clock me-1"></i>${created}
+          </span>
+        `;
+      }
+
+      // structured details
+      const details = modalEl.querySelector('#modalDetails');
+      if (details) {
+        details.innerHTML = `
+          <dt class="col-5 col-md-3">Report ID</dt><dd class="col-7 col-md-3">${cid || '-'}</dd>
+          <dt class="col-5 col-md-3">Created</dt><dd class="col-7 col-md-3">${created || '-'}</dd>
+          <dt class="col-5 col-md-3">Category</dt><dd class="col-7 col-md-3">${category || '-'}</dd>
+          <dt class="col-5 col-md-3">Priority</dt><dd class="col-7 col-md-3">${priority || '-'}</dd>
+          <dt class="col-5 col-md-3">Status</dt><dd class="col-7 col-md-3">${status || '-'}</dd>
+          <dt class="col-5 col-md-3">Reporter</dt><dd class="col-7 col-md-9">${user || '-'} ${email ? `&lt;${email}&gt;` : ''} ${contact ? `· ${contact}` : ''}</dd>
+        `;
+      }
+
+      // location + description
+      modalEl.querySelector('#modalLocation').innerHTML = location
+        ? `<div class="fw-bold"><i class="fas fa-location-dot me-1 text-danger"></i>${location}</div>`
+        : `<div class="text-muted fw-bold">No location provided.</div>`;
+
+      modalEl.querySelector('#modalDescription').innerHTML = description
+        ? `<div class="fw-bold text-muted small mb-1">Description</div><div class="fw-bold">${description}</div>`
+        : `<div class="text-muted fw-bold">No description provided.</div>`;
+
+      modalEl.querySelector('#modalContact').innerHTML = contact
+        ? `<div class="fw-bold text-muted small mb-1">Contact</div><div class="fw-bold">${contact}</div>`
+        : '';
+
+      // map
+      const coordsEl = modalEl.querySelector('#modalCoordinates');
+      const mapWrapper = modalEl.querySelector('#modalMapWrapper');
+      const mapFrame = modalEl.querySelector('#modalMap');
+      const mapsLink = modalEl.querySelector('#modalMapsLink');
+
+      const hasCoords = lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng));
+      if (hasCoords) {
+        coordsEl.innerHTML = `<div class="text-muted small fw-bold">Lat: <code>${parseFloat(lat).toFixed(6)}</code> · Lng: <code>${parseFloat(lng).toFixed(6)}</code></div>`;
+        const q = encodeURIComponent(`${lat},${lng}`);
+        mapFrame.src = `https://maps.google.com/maps?q=${q}&z=15&output=embed`;
+        mapWrapper.style.display = '';
+        mapsLink.href = `https://maps.google.com/?q=${q}`;
+        mapsLink.style.display = '';
+      } else {
+        coordsEl.innerHTML = '';
+        mapFrame.src = '';
+        mapWrapper.style.display = 'none';
+        mapsLink.style.display = 'none';
+      }
+
+      // gallery
+      const gallery = modalEl.querySelector('#modalGallery');
+      const noImagesEl = modalEl.querySelector('#modalNoImages');
+      gallery.innerHTML = '';
+
+      if (!images || images.length === 0) {
+        noImagesEl.style.display = '';
+      } else {
+        noImagesEl.style.display = 'none';
+        images.forEach((img) => {
+          const src = `{{ url_for('static', filename='uploads/complaints') }}/${cid}/${img}`;
+          const col = document.createElement('div');
+          col.className = 'col-6 col-md-4';
+          col.innerHTML = `<a href="${src}" target="_blank" rel="noopener"><img src="${src}" class="gallery-img" alt="image"></a>`;
+          gallery.appendChild(col);
+        });
+      }
+
+      // processed gallery
+      const procGallery = modalEl.querySelector('#modalProcessedGallery');
+      const noProcEl = modalEl.querySelector('#modalNoProcessed');
+      procGallery.innerHTML = '';
+
+      if (!processed || processed.length === 0) {
+        noProcEl.style.display = '';
+      } else {
+        noProcEl.style.display = 'none';
+
+        const totals = {
+          pothole_count: 0,
+          crack_count: 0,
+          pothole_estimate_cost: 0,
+          crack_estimate_cost: 0,
+          total_estimate_cost: 0,
+        };
+
+        processed.forEach(p => {
+          totals.pothole_count += Number(p?.pothole_count || 0);
+          totals.crack_count += Number(p?.crack_count || 0);
+          totals.pothole_estimate_cost += Number(p?.pothole_estimate_cost || 0);
+          totals.crack_estimate_cost += Number(p?.crack_estimate_cost || 0);
+          totals.total_estimate_cost += Number(p?.total_estimate_cost || 0);
+
+          const col = document.createElement('div');
+          col.className = 'col-12 col-md-6';
+
+          const imgSrc = (p.filepath || "").startsWith("/")
+            ? p.filepath
+            : "/static/" + (p.filepath || "");
+
+          col.innerHTML = `
+            <div class="processed-card">
+              <img src="${imgSrc}" alt="processed">
+            </div>
+          `;
+          procGallery.appendChild(col);
+        });
+
+        const summaryEl = modalEl.querySelector('#modalProcessedSummary');
+        if (summaryEl) {
+          const fmt = (v) => {
+            const n = Number(v || 0);
+            try { return n.toLocaleString('en-IN', { maximumFractionDigits: 2 }); } catch(e) { return String(n); }
+          };
+
+          summaryEl.style.display = '';
+          summaryEl.innerHTML = `
+            <div class="section-title" style="margin:0 0 8px;"><i class="fas fa-calculator"></i>Total Summary (All Images)</div>
+            <div class="processed-meta">
+              <div><strong>Total Potholes Detected</strong><span>${fmt(totals.pothole_count)}</span></div>
+              <div><strong>Total Pothole Cost</strong><span>₹${fmt(totals.pothole_estimate_cost)}</span></div>
+              <div><strong>Total Cracks Detected</strong><span>${fmt(totals.crack_count)}</span></div>
+              <div><strong>Total Crack Cost</strong><span>₹${fmt(totals.crack_estimate_cost)}</span></div>
+              <div><strong>Total Estimated Cost</strong><span>₹${fmt(totals.total_estimate_cost)}</span></div>
+            </div>
+          `;
+        }
+      }
+    });
+
+    // Export PDF
+    const exportBtn = document.getElementById('modalExportPdf');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', async function () {
+        const { jsPDF } = window.jspdf || {};
+        if (!jsPDF || !window.html2canvas) {
+          alert('PDF export libraries failed to load.');
+          return;
+        }
+        const modalContent = modalEl.querySelector('.modal-content');
+        if (!modalContent) return;
+
+        const prevWidth = modalContent.style.width;
+        modalContent.style.width = '980px';
+
+        await new Promise(r => requestAnimationFrame(r));
+
+        const canvas = await html2canvas(modalContent, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+        const imgData = canvas.toDataURL('image/png');
+
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        if (imgHeight <= pageHeight) {
+          pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
+        } else {
+          let remainingHeight = imgHeight;
+          let position = 0;
+
+          const pageCanvas = document.createElement('canvas');
+          const pageCtx = pageCanvas.getContext('2d');
+
+          const pagePixelWidth = canvas.width;
+          const pagePixelHeight = Math.floor((pageHeight * canvas.width) / pageWidth);
+
+          pageCanvas.width = pagePixelWidth;
+          pageCanvas.height = pagePixelHeight;
+
+          while (remainingHeight > 0) {
+            const srcY = Math.floor((position * canvas.width) / pageWidth);
+            pageCtx.clearRect(0, 0, pagePixelWidth, pagePixelHeight);
+            pageCtx.drawImage(canvas, 0, srcY, pagePixelWidth, pagePixelHeight, 0, 0, pagePixelWidth, pagePixelHeight);
+
+            const pageData = pageCanvas.toDataURL('image/png');
+            if (position === 0) pdf.addImage(pageData, 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+            else { pdf.addPage(); pdf.addImage(pageData, 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST'); }
+
+            position += pageHeight;
+            remainingHeight -= pageHeight;
+          }
+        }
+
+        modalContent.style.width = prevWidth;
+
+        const title = (modalEl.querySelector('#modalTitle')?.textContent || 'report').trim().replace(/\s+/g, '_');
+        const cid = (modalEl.querySelector('#modalCid')?.textContent || '').replace('#', '');
+        pdf.save(cid ? `${title}_#${cid}.pdf` : `${title}.pdf`);
+      });
+    }
+  }
+
+  // ---------------------------
+  // Reply Modal Wiring
+  // ---------------------------
+  const replyModal = document.getElementById('replyModal');
+  const replyForm = document.getElementById('replyForm');
+
+  if (replyModal) {
+    replyModal.addEventListener('show.bs.modal', function (event) {
+      const btn = event.relatedTarget;
+      const cid = btn?.getAttribute('data-id') || '';
+      const title = btn?.getAttribute('data-title') || '';
+      replyModal.querySelector('#replyComplaintId').value = cid;
+      replyModal.querySelector('#replyTitle').textContent = title ? `For: ${title} (#${cid})` : `#${cid}`;
+      replyModal.querySelector('#replyMessage').value = '';
+      replyModal.querySelector('#replyStatus').value = '';
+      replyModal.querySelector('#replySuccess').classList.add('d-none');
+      replyModal.querySelector('#replyError').classList.add('d-none');
+      const prev = replyModal.querySelector('#replyPreview');
+      if(prev) prev.innerHTML = '';
+      const input = replyModal.querySelector('#replyImages');
+      if(input) input.value = '';
+    });
+  }
+
+  if (replyForm) {
+    replyForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const cid = document.getElementById('replyComplaintId').value;
+      const message = document.getElementById('replyMessage').value.trim();
+      const status = document.getElementById('replyStatus').value;
+      const filesInput = document.getElementById('replyImages');
+
+      const okBox = document.getElementById('replySuccess');
+      const errBox = document.getElementById('replyError');
+      okBox.classList.add('d-none');
+      errBox.classList.add('d-none');
+
+      if (!cid || !message) {
+        errBox.textContent = 'Message is required.';
+        errBox.classList.remove('d-none');
+        return;
+      }
+
+      try {
+        const fd = new FormData();
+        fd.append('message', message);
+        if (status) fd.append('status', status);
+        if (filesInput && filesInput.files && filesInput.files.length) {
+          Array.from(filesInput.files).forEach(f => fd.append('images', f));
+        }
+
+        const resp = await fetch(`/admin/complaints/${cid}/reply`, { method: 'POST', body: fd });
+        const data = await resp.json();
+
+        if (!resp.ok || !data.success) throw new Error(data.error || 'Failed');
+
+        okBox.textContent = 'Reply sent successfully.';
+        okBox.classList.remove('d-none');
+
+        setTimeout(() => {
+          const m = bootstrap.Modal.getInstance(replyModal);
+          m?.hide();
+          location.reload();
+        }, 700);
+
+      } catch (err) {
+        errBox.textContent = 'Failed to send reply.';
+        errBox.classList.remove('d-none');
+      }
+    });
+  }
+
+  // Preview reply images
+  const replyImagesInput = document.getElementById('replyImages');
+  const replyPreview = document.getElementById('replyPreview');
+
+  if (replyImagesInput && replyPreview) {
+    replyImagesInput.addEventListener('change', function () {
+      replyPreview.innerHTML = '';
+      const files = Array.from(replyImagesInput.files || []);
+      files.slice(0, 6).forEach(file => {
+        const url = URL.createObjectURL(file);
+        const col = document.createElement('div');
+        col.className = 'col-4 col-md-3';
+        col.innerHTML = `<img src="${url}" class="img-fluid rounded-4 border" style="aspect-ratio:1/1; object-fit:cover;">`;
+        replyPreview.appendChild(col);
+      });
+    });
+  }
+
+  // ---------------------------
+  // Priority Update Wiring
+  // ---------------------------
+  function _chipClassForPriority(p){
+    const pr = String(p || '').toLowerCase();
+    if (pr === 'high') return 'chip-high';
+    if (pr === 'medium') return 'chip-medium';
+    return 'chip-low';
+  }
+
+  function _updateCardPriorityUI(complaintId, priority){
+    const pid = String(complaintId);
+    const pr = String(priority || '').toLowerCase();
+
+    const cardItem = document.querySelector(`.report-item [data-bs-target="#complaintModal"][data-id="${pid}"]`)?.closest('.report-item');
+    if (cardItem) {
+      cardItem.dataset.priority = pr;
+    }
+
+    const prSelect = document.querySelector(`[data-priority-select][data-id="${pid}"]`);
+    if (prSelect) prSelect.value = pr;
+
+    if (cardItem) {
+      const metaRow = cardItem.querySelector('.meta-row');
+      if (metaRow) {
+        const chips = Array.from(metaRow.querySelectorAll('.chip'));
+        const prChip = chips.find(ch => ch.classList.contains('chip-low') || ch.classList.contains('chip-medium') || ch.classList.contains('chip-high'));
+        if (prChip) {
+          prChip.classList.remove('chip-low', 'chip-medium', 'chip-high');
+          prChip.classList.add(_chipClassForPriority(pr));
+          prChip.innerHTML = `<i class="fas fa-signal me-1"></i>${pr.charAt(0).toUpperCase() + pr.slice(1)}`;
+        }
+      }
+    }
+
+    // Also keep View button dataset in sync (for modal meta chips)
+    const viewBtn = document.querySelector(`[data-bs-target="#complaintModal"][data-id="${pid}"]`);
+    if (viewBtn) viewBtn.setAttribute('data-priority', pr.charAt(0).toUpperCase() + pr.slice(1));
+  }
+
+  async function _setPriority(complaintId, priority, btn){
+    const pid = String(complaintId);
+    const pr = String(priority || '').toLowerCase();
+    if (!pid || !['low','medium','high'].includes(pr)) return;
+
+    const oldText = btn ? btn.innerHTML : null;
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Saving';
+    }
+
+    try {
+      const resp = await fetch(`/admin/complaints/${pid}/priority`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priority: pr })
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.success) throw new Error(data.error || 'Failed');
+      _updateCardPriorityUI(pid, pr);
+      applyFilters();
+    } catch (e) {
+      alert('Failed to update priority.');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = oldText;
+      }
+    }
+  }
+
+  document.querySelectorAll('[data-set-priority]').forEach(btn => {
+    btn.addEventListener('click', function(){
+      const cid = this.getAttribute('data-id');
+      const sel = document.querySelector(`[data-priority-select][data-id="${cid}"]`);
+      const pr = sel ? sel.value : 'low';
+      _setPriority(cid, pr, this);
+    });
+  });
+</script>
+{% endblock %}

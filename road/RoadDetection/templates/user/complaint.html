@@ -1,0 +1,553 @@
+{% extends "user/base.html" %}
+{% block title %}Complaint / Grievance{% endblock %}
+{% block content %}
+<section class="page-section">
+  {% set flashed = get_flashed_messages(with_categories=true) %}
+  {% if flashed %}
+  <script id="flash-data" type="application/json">{{ flashed|tojson }}</script>
+  {% endif %}
+  <div class="section-header">
+    <h3>Complaint / Grievance</h3>
+    <p>Share road issues so the team can take action</p>
+  </div>
+
+  <!-- Leaflet CSS (small, CDN) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <div class="complaint-grid">
+    <form class="complaint-form" id="complaintForm" method="post" enctype="multipart/form-data" action="{{ url_for('user_complaint') }}">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="comp_title">Title</label>
+          <input type="text" id="comp_title" name="title" placeholder="Short title of the issue" required>
+        </div>
+        <div class="form-group">
+          <label for="comp_category">Category</label>
+          <select id="comp_category" name="category" required>
+            <option value="">Select category</option>
+            <option value="Pothole">Pothole</option>
+            <option value="Cracks">Cracks</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="comp_location">Location</label>
+          <input type="text" id="comp_location" name="location" placeholder="Area, street, landmark">
+        </div>
+        <div class="form-group">
+          <label for="comp_priority">Priority</label>
+          <div class="segmented">
+            <input type="radio" name="priority" id="prio_low" value="low" checked>
+            <label for="prio_low">Admin can set only</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="comp_desc">Description</label>
+        <textarea id="comp_desc" name="description" rows="5" maxlength="600" placeholder="Describe the issue, impact, and any nearby markers" ></textarea>
+        <div class="muted small" id="descCount">0 / 600</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="comp_images">Attach Images</label>
+          <input type="file" id="comp_images" name="images" accept="image/*" multiple onchange="validateFileSize(this)">
+          <div class="preview-list" id="imgPreview"></div>
+        </div>
+        <div class="form-group">
+          <label for="comp_contact">Contact Number</label>
+          <input type="tel" id="comp_contact" name="contact" placeholder="Optional contact number">
+          <div class="inline">
+            <input type="checkbox" id="comp_anonymous" name="anonymous" value="1">
+            <label for="comp_anonymous">Submit as anonymous</label>
+          </div>
+        </div>
+      </div>
+
+      <input type="hidden" id="latitude" name="latitude">
+      <input type="hidden" id="longitude" name="longitude">
+      <div class="map-card">
+        <div class="map-bar">
+          <span><i class="fas fa-map-marker-alt"></i> Pin Approximate Location</span>
+          <div class="map-actions">
+            <button type="button" id="manualToggle" class="btn btn-small btn-outline">Enter Manually</button>
+            <button type="button" id="useLocation" class="btn btn-small btn-outline">Use My Location</button>
+          </div>
+        </div>
+
+        <div id="manualPanel" class="manual-panel" hidden>
+          <div class="form-row address-row">
+            <div class="form-group address-group">
+              <label for="address_search">Search Address</label>
+              <div class="address-input">
+                <input type="text" id="address_search" placeholder="Search address across India" autocomplete="off">
+                <button type="button" id="address_go" class="btn btn-small btn-outline">Search</button>
+              </div>
+              <div id="address_suggest" class="address-suggest" hidden></div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="manual_lat">Latitude</label>
+              <input type="text" id="manual_lat" placeholder="e.g. 12.9716" inputmode="decimal" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="manual_lng">Longitude</label>
+              <input type="text" id="manual_lng" placeholder="e.g. 77.5946" inputmode="decimal" autocomplete="off">
+            </div>
+          </div>
+          <div class="inline muted small">Tip: Values must be valid coordinates (lat -90..90, lng -180..180)</div>
+        </div>
+
+        <div class="map-placeholder">
+          <div id="leafletMap"></div>
+          <div class="coords" id="coordText">No location selected</div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <div class="actions-right">
+          <button type="reset" class="btn btn-outline">Clear</button>
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+      </div>
+    </form>
+
+    <aside class="tips-card">
+      <h4>Good Report Tips</h4>
+      <ul class="tips-list">
+        <li>Take clear photos from multiple angles</li>
+        <li>Mention nearby landmarks or pole numbers</li>
+        <li>Estimate size/severity if possible</li>
+        <li>Prefer daytime photos for clarity</li>
+      </ul>
+    </aside>
+  </div>
+</section>
+
+<style>
+.page-section{padding:1rem}
+.complaint-grid{display:grid;grid-template-columns:2fr 1fr;gap:1.5rem}
+.complaint-form{background:#fff;border-radius:12px;padding:1rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-group{display:flex;flex-direction:column}
+.form-group label{font-weight:600;margin-bottom:.35rem}
+.form-group input,.form-group select,.form-group textarea{padding:.6rem .75rem;border:1px solid #e0e0e0;border-radius:8px}
+.segmented{display:inline-grid;grid-template-columns:auto auto auto;gap:.5rem;background:#f6f7fb;border:1px solid #e9e9ef;padding:.25rem;border-radius:999px;align-items:center}
+.segmented input{display:none}
+.segmented label{padding:.35rem .75rem;border-radius:999px;cursor:pointer}
+.segmented input:checked+label{background:#5D6CC0;color:#fff}
+.muted{color:#6b7280}
+.small{font-size:.85rem;margin-top:.25rem}
+.preview-list{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
+.preview-list img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid #eee}
+.map-card{margin-top:1rem;border:1px solid #e9e9ef;border-radius:12px;overflow:hidden;background:#fff}
+.map-bar{display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;background:#fafbff;border-bottom:1px solid #e9e9ef}
+.map-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+.manual-panel{padding: .75rem 1rem; border-bottom:1px solid #e9e9ef; background:#fff}
+.address-group .address-input{display:flex;gap:.5rem;align-items:center}
+.address-group input{flex:1}
+.address-suggest{position:relative}
+.address-suggest ul{position:absolute;z-index:10;list-style:none;margin:.25rem 0 0 0;padding:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;max-height:220px;overflow:auto;box-shadow:0 6px 16px rgba(0,0,0,.08)}
+.address-suggest li{padding:.5rem .75rem;cursor:pointer}
+.address-suggest li:hover{background:#f6f7fb}
+.address-suggest li.active{background:#edf2ff}
+.map-placeholder{position:relative; height:220px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f6f7fb,#eef0f7)}
+.map-placeholder #leafletMap{position:absolute; inset:0; width:100%; height:100%; border:0;}
+.map-placeholder .coords{font-size:.95rem;color:#374151;background:#ffffffcc;padding:.4rem .6rem;border-radius:8px;border:1px solid #e5e7eb}
+.map-placeholder img{max-height:80%;opacity:.4}
+.form-actions{display:flex;justify-content:space-between;align-items:center;margin-top:1rem}
+.inline{display:flex;align-items:center;gap:.5rem}
+.btn{padding:.6rem .9rem;border-radius:8px;border:1px solid transparent;cursor:pointer}
+.btn-primary{background:#5D6CC0;color:#fff}
+.btn-outline{background:#fff;border-color:#cfd3e1;color:#374151}
+.btn-small{padding:.4rem .65rem;font-size:.85rem}
+.tips-card{background:#fff;border-radius:12px;padding:1rem;height:max-content}
+.tips-card h4{margin:0 0 .5rem 0}
+.tips-list{padding-left:1rem}
+.tips-list li{margin:.35rem 0}
+@media(max-width:992px){.complaint-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}.map-placeholder{height:180px}}
+</style>
+
+<!-- Leaflet JS (CDN) -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+function validateFileSize(input) {
+    const maxSize = 2 * 1024 * 1024; // 2MB
+
+    for (let i = 0; i < input.files.length; i++) {
+        if (input.files[i].size > maxSize) {
+            Swal.fire({
+                icon: "error",
+                title: "File too large",
+                text: "Each image must be under 2MB"
+            });
+            input.value = "";
+            return;
+        }
+    }
+}
+(function(){
+  function showFlashPopup(){
+    var el = document.getElementById('flash-data');
+    if(!el) return;
+    var data;
+    try { data = JSON.parse(el.textContent || '[]'); } catch(e) { data = []; }
+    if(!data || !data.length) return;
+
+    var first = data[0];
+    var category = first[0] || 'info';
+    var message = first[1] || '';
+
+    var icon = 'info';
+    if(category === 'success') icon = 'success';
+    else if(category === 'error') icon = 'error';
+    else if(category === 'warning') icon = 'warning';
+
+    if(typeof Swal !== 'undefined'){
+      Swal.fire({
+        icon: icon,
+        title: (category === 'success' ? 'Submitted' : (category === 'error' ? 'Failed' : 'Notice')),
+        text: message,
+        confirmButtonText: 'OK'
+      });
+    } else {
+      alert(message);
+    }
+  }
+
+  function wireSubmitConfirmation(){
+    var form = document.getElementById('complaintForm');
+    if(!form) return;
+
+    form.addEventListener('submit', function(e){
+      if(form.dataset.confirmed === '1') return;
+      e.preventDefault();
+
+      var submitBtn = form.querySelector('button[type="submit"]');
+      if(submitBtn) submitBtn.disabled = true;
+
+      var proceed = function(){
+        form.dataset.confirmed = '1';
+        form.submit();
+      };
+
+      var cancel = function(){
+        if(submitBtn) submitBtn.disabled = false;
+      };
+
+      if(typeof Swal !== 'undefined'){
+        Swal.fire({
+          title: 'Would you like to proceed?',
+          text: 'Your complaint will be submitted for review.',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Submit',
+          cancelButtonText: 'Cancel',
+          reverseButtons: true
+        }).then(function(result){
+          if(result && result.isConfirmed){
+            Swal.fire({
+              title: 'Submitting...',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              didOpen: function(){
+                Swal.showLoading();
+              }
+            });
+            proceed();
+          } else {
+            cancel();
+          }
+        });
+      } else {
+        var ok = confirm('Would you like to proceed?');
+        if(ok) proceed();
+        else cancel();
+      }
+    });
+  }
+
+  showFlashPopup();
+  wireSubmitConfirmation();
+
+  // Textarea Counter Logic (Omitted for brevity, assume it's fine)
+  var ta=document.getElementById('comp_desc');
+  var counter=document.getElementById('descCount');
+  if(ta&&counter){
+    var upd=function(){counter.textContent=ta.value.length+" / "+ta.maxLength};
+    ta.addEventListener('input',upd);upd();
+  }
+  // Image Preview Logic (Omitted for brevity, assume it's fine)
+  var input=document.getElementById('comp_images');
+  var list=document.getElementById('imgPreview');
+  if(input&&list){
+    input.addEventListener('change',function(){
+      list.innerHTML='';
+      Array.from(input.files||[]).slice(0,6).forEach(function(f){
+        if(!f.type.startsWith('image/'))return;
+        var r=new FileReader();
+        r.onload=function(e){
+          var img=new Image();
+          img.src=e.target.result;list.appendChild(img);
+        };
+        r.readAsDataURL(f);
+      });
+    });
+  }
+
+  var locBtn=document.getElementById('useLocation');
+  var manualBtn=document.getElementById('manualToggle');
+  var latEl=document.getElementById('latitude');
+  var lngEl=document.getElementById('longitude');
+  var coordText=document.getElementById('coordText');
+  var mapEl=document.getElementById('leafletMap');
+  var manualPanel=document.getElementById('manualPanel');
+  var manualLat=document.getElementById('manual_lat');
+  var manualLng=document.getElementById('manual_lng');
+  var addrInput=document.getElementById('address_search');
+  var addrGo=document.getElementById('address_go');
+  var addrSuggest=document.getElementById('address_suggest');
+  var suggestList = null; // UL element
+  var suggestItems = [];  // LI elements
+  var selectedIndex = -1;
+  var map, marker;
+
+  function initMap(){
+    if(!mapEl || typeof L==='undefined') return;
+    map=L.map('leafletMap', { zoomControl:true, attributionControl:true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+    var lat = parseFloat(latEl && latEl.value ? latEl.value : NaN);
+    var lng = parseFloat(lngEl && lngEl.value ? lngEl.value : NaN);
+    if(!isNaN(lat) && !isNaN(lng)){
+      map.setView([lat,lng], 15);
+      marker=L.marker([lat,lng]).addTo(map);
+      setCoordText(lat, lng); // Initialize coord text if values are present
+    } else {
+      map.setView([20.5937, 78.9629], 4); // India center as a broad default
+    }
+    map.on('click', function(e){
+      var ll=e.latlng; setLatLng(ll.lat, ll.lng, true);
+    });
+  }
+
+  function setCoordText(lat, lng) {
+      if(coordText) coordText.textContent='Lat: '+lat.toFixed(6)+'  |  Lng: '+lng.toFixed(6);
+  }
+
+  function setLatLng(lat, lng, updateMap){
+    if(latEl) latEl.value=lat.toFixed(6);
+    if(lngEl) lngEl.value=lng.toFixed(6);
+    setCoordText(lat, lng);
+
+    if(updateMap && map){
+      if(!marker){ marker=L.marker([lat,lng]).addTo(map); }
+      else { marker.setLatLng([lat,lng]); }
+      map.setView([lat,lng], Math.max(15, map.getZoom())); // Increased default zoom to 15
+    }
+  }
+
+  initMap();
+
+  // Manual panel toggle
+  if(manualBtn){
+    manualBtn.addEventListener('click', function(){
+      var isHidden = manualPanel.hasAttribute('hidden');
+      if(isHidden){
+        manualPanel.removeAttribute('hidden');
+        manualBtn.textContent='Hide Manual';
+        // Seed manual inputs from current hidden fields (if present)
+        if(latEl && lngEl && latEl.value && lngEl.value){
+          manualLat.value = latEl.value;
+          manualLng.value = lngEl.value;
+        }
+      } else {
+        manualPanel.setAttribute('hidden','');
+        manualBtn.textContent='Enter Manually';
+      }
+    });
+  }
+
+  function parseCoord(val){
+    if(typeof val!== 'string') return NaN;
+    // allow comma or space
+    val = val.trim().replace(/,/g,'.');
+    return parseFloat(val);
+  }
+
+  function isValidLat(v){ return !isNaN(v) && v>=-90 && v<=90; }
+  function isValidLng(v){ return !isNaN(v) && v>=-180 && v<=180; }
+
+  function handleManualChange(){
+    var lat = parseCoord(manualLat.value);
+    var lng = parseCoord(manualLng.value);
+    if(isValidLat(lat) && isValidLng(lng)){
+      setLatLng(lat, lng, true);
+    }
+  }
+
+  if(manualLat) manualLat.addEventListener('input', handleManualChange);
+  if(manualLng) manualLng.addEventListener('input', handleManualChange);
+
+  // Address search with Nominatim
+  function clearSuggestions(){
+    if(!addrSuggest) return;
+    addrSuggest.innerHTML='';
+    suggestList = null;
+    suggestItems = [];
+    selectedIndex = -1;
+    addrSuggest.setAttribute('hidden','');
+  }
+
+  function renderSuggestions(items){
+    if(!addrSuggest) return;
+    if(!items || !items.length){ clearSuggestions(); return; }
+    var ul=document.createElement('ul');
+    items.forEach(function(it){
+      var li=document.createElement('li');
+      // Compose a friendlier label from address details when available
+      var label = it.display_name;
+      try {
+        if (it.address) {
+          var parts = [];
+          if (it.address.name) parts.push(it.address.name);
+          if (it.address.suburb) parts.push(it.address.suburb);
+          if (it.address.city || it.address.town) parts.push(it.address.city || it.address.town);
+          if (it.address.state) parts.push(it.address.state);
+          if (it.address.postcode) parts.push(it.address.postcode);
+          if (it.address.country) parts.push(it.address.country);
+          var composed = parts.filter(Boolean).join(', ');
+          if (composed) label = composed;
+        }
+      } catch(e) {}
+      li.textContent = label;
+      li.addEventListener('click', function(){
+        var lat=parseFloat(it.lat), lng=parseFloat(it.lon);
+        if(isValidLat(lat) && isValidLng(lng)){
+          manualLat.value=lat.toFixed(6);
+          manualLng.value=lng.toFixed(6);
+          setLatLng(lat, lng, true);
+          clearSuggestions();
+        }
+      });
+      ul.appendChild(li);
+    });
+    addrSuggest.innerHTML='';
+    addrSuggest.appendChild(ul);
+    suggestList = ul;
+    suggestItems = Array.from(ul.querySelectorAll('li'));
+    addrSuggest.removeAttribute('hidden');
+  }
+
+  var searchTimer;
+  function doSearch(query, pickFirst){
+    if(!query || query.trim().length < 3){ clearSuggestions(); return; }
+    // Restrict to India and request address details for better labels
+    var url='https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&countrycodes=in&q='+encodeURIComponent(query.trim());
+    fetch(url, { headers: { 'Accept': 'application/json', 'Accept-Language': 'en-IN,en;q=0.9' }})
+      .then(function(r){ return r.json(); })
+      .then(function(json){
+        if(pickFirst && json && json.length){
+          var first=json[0];
+          var lat=parseFloat(first.lat), lng=parseFloat(first.lon);
+          if(isValidLat(lat) && isValidLng(lng)){
+            manualLat.value=lat.toFixed(6);
+            manualLng.value=lng.toFixed(6);
+            setLatLng(lat, lng, true);
+          }
+          clearSuggestions();
+        } else {
+          renderSuggestions(json);
+        }
+      })
+      .catch(function(){ clearSuggestions(); });
+  }
+
+  if(addrInput){
+    addrInput.addEventListener('input', function(){
+      clearTimeout(searchTimer);
+      var val=this.value;
+      searchTimer=setTimeout(function(){ doSearch(val, false); }, 350);
+    });
+    addrInput.addEventListener('keydown', function(e){
+      if(addrSuggest && !addrSuggest.hasAttribute('hidden') && suggestItems.length){
+        if(e.key === 'ArrowDown'){
+          e.preventDefault();
+          selectedIndex = (selectedIndex + 1) % suggestItems.length;
+          suggestItems.forEach(function(li,i){ li.classList.toggle('active', i===selectedIndex); });
+          return;
+        }
+        if(e.key === 'ArrowUp'){
+          e.preventDefault();
+          selectedIndex = (selectedIndex - 1 + suggestItems.length) % suggestItems.length;
+          suggestItems.forEach(function(li,i){ li.classList.toggle('active', i===selectedIndex); });
+          return;
+        }
+        if(e.key === 'Enter'){
+          e.preventDefault();
+          if(selectedIndex >= 0){
+            suggestItems[selectedIndex].click();
+          } else {
+            doSearch(addrInput.value, true);
+          }
+          return;
+        }
+        if(e.key === 'Escape'){
+          e.preventDefault();
+          clearSuggestions();
+          return;
+        }
+      } else if(e.key === 'Enter'){
+        e.preventDefault();
+        doSearch(addrInput.value, true);
+      }
+    });
+  }
+
+  if(addrGo){
+    addrGo.addEventListener('click', function(){
+      doSearch(addrInput ? addrInput.value : '', true);
+    });
+  }
+
+  // Close suggestions on outside click
+  document.addEventListener('click', function(e){
+    if(!addrSuggest || addrSuggest.hasAttribute('hidden')) return;
+    if(e.target === addrSuggest || e.target === addrInput || (suggestList && suggestList.contains(e.target))) return;
+    clearSuggestions();
+  });
+
+  if(locBtn && navigator.geolocation){
+    locBtn.addEventListener('click', function(){
+      locBtn.disabled=true; locBtn.textContent='Fetching...';
+
+      navigator.geolocation.getCurrentPosition(function(pos){
+        // SUCCESS: Location found
+        var lat=pos.coords.latitude;
+        var lng=pos.coords.longitude;
+        setLatLng(lat, lng, true);
+        locBtn.disabled=false; locBtn.textContent='Location Used';
+        setTimeout(() => locBtn.textContent='Use My Location', 2000); // Revert button text
+      }, function(error){
+        // ERROR: Location failed
+        console.error("Geolocation Error:", error); // Log the detailed error
+        var msg = 'Location access failed';
+        if (error.code === error.PERMISSION_DENIED) {
+            msg = "Permission Denied. Check browser settings (HTTPS required).";
+        } else if (error.code === error.TIMEOUT) {
+            msg = "Request timed out. Try again.";
+        }
+        if(coordText) coordText.textContent=msg;
+        locBtn.disabled=false; locBtn.textContent='Use My Location';
+      }, {enableHighAccuracy:true, timeout:15000, maximumAge:0}); // Increased timeout to 15s
+    });
+  }
+})();
+</script>
+{% endblock %}

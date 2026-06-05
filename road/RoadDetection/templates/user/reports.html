@@ -1,0 +1,261 @@
+{% extends "user/base.html" %}
+{% block title %}Reports - Road Damage Detection{% endblock %}
+{% block content %}
+<!-- Bootstrap CSS/JS (scoped to this page) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+<style>
+  .meta-chip { font-size: .75rem; padding: .35rem .5rem; border-radius: 999px; border: 1px solid #e6e9f0; background: #f8fafc; color: #334155; }
+  .meta-chip.cat { background: #eef6ff; color: #0b63c4; border-color: #d9ecff; }
+  .meta-chip.prio-low { background: #ecfdf5; color: #117a37; border-color: #bbf7d0; }
+  .meta-chip.prio-medium { background: #fff7ed; color: #a15d00; border-color: #fed7aa; }
+  .meta-chip.prio-high { background: #fef2f2; color: #b42318; border-color: #fecaca; }
+  .meta-chip.status-new { background: #eef2ff; color: #3b5ccc; border-color: #dfe6ff; }
+  .meta-chip.status-in\-progress { background: #e6fbff; color: #117e96; border-color: #c9f3fb; }
+  .meta-chip.status-resolved { background: #f1fff7; color: #1a7f49; border-color: #dcfce7; }
+  .meta-chip.status-closed { background: #f5f5f5; color: #666; border-color: #e5e7eb; }
+  .thumb { display: block; width: 100%; aspect-ratio: 16/9; border-radius: .5rem; object-fit: cover; border: 1px solid #e9ecef; }
+  .thumb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+  .thumb-more { display:flex; align-items:center; justify-content:center; border:1px dashed #cbd5e1; border-radius:.5rem; color:#475569; font-weight:600; }
+  .empty-state { border: 1px dashed #cbd5e1; border-radius: .75rem; padding: 2rem; text-align: center; color: #475569; background: #ffffff; }
+  .reply-item { border:1px solid #e9ecef; border-radius:.5rem; padding:.75rem; background:#fff; }
+  .reply-meta { font-size:.8rem; color:#6b7280; }
+  .reply-gallery img { display:block; width:100%; border-radius:.25rem; border:1px solid #e9ecef; }
+</style>
+<section class="page-section">
+  <div class="section-header">
+    <h3>Reports</h3>
+    <p>Your grievance submissions and their current status</p>
+  </div>
+
+  {% if complaints and complaints|length > 0 %}
+    <div class="row g-3">
+      {% for c in complaints %}
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+          {% if c.images and c.images|length > 0 %}
+          <img class="card-img-top" src="{{ url_for('static', filename='uploads/complaints/' ~ c.id ~ '/' ~ c.images[0]) }}" alt="thumbnail">
+          {% endif %}
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h5 class="card-title mb-0">{{ c.title }}</h5>
+              <span class="text-muted small ms-2">{{ c.created_at }}</span>
+            </div>
+            <div class="d-flex flex-wrap gap-1 mb-2">
+              <span class="meta-chip cat">{{ c.category }}</span>
+              <span class="meta-chip prio-{{ c.priority|lower }}">{{ c.priority|title }}</span>
+              <span class="meta-chip status-{{ (c.status or 'New')|lower }}">{{ c.status or 'New' }}</span>
+            </div>
+            {% if c.location_text %}
+            <p class="card-text text-secondary small mb-2"><i class="fas fa-map-marker-alt me-1 text-danger"></i>{{ c.location_text }}</p>
+            {% endif %}
+            {% if c.images and c.images|length > 1 %}
+            <div class="thumb-grid mb-2">
+              {% set maxThumb = 3 %}
+              {% for img in c.images[1:maxThumb] %}
+              <img class="thumb" src="{{ url_for('static', filename='uploads/complaints/' ~ c.id ~ '/' ~ img) }}" alt="thumb">
+              {% endfor %}
+              {% if c.images|length > maxThumb %}
+              <div class="thumb-more">+{{ c.images|length - maxThumb }}</div>
+              {% endif %}
+            </div>
+            {% endif %}
+            <div class="mt-auto d-flex justify-content-end gap-2">
+              <button
+                class="btn btn-sm btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#complaintModal"
+                data-id="{{ c.id }}"
+                data-title="{{ c.title }}"
+                data-category="{{ c.category }}"
+                data-priority="{{ c.priority|title }}"
+                data-status="{{ c.status or 'New' }}"
+                data-created="{{ c.created_at }}"
+                data-location="{{ c.location_text or '' }}"
+                data-description="{{ (c.description or '')|e }}"
+                data-contact="{{ c.contact or '' }}"
+                data-latitude="{{ c.latitude or '' }}"
+                data-longitude="{{ c.longitude or '' }}"
+                data-images='{{ c.images|tojson }}'
+              >
+                View
+              </button>
+              <button
+                class="btn btn-sm btn-outline-secondary"
+                data-bs-toggle="modal"
+                data-bs-target="#repliesModal"
+                data-id="{{ c.id }}"
+                data-title="{{ c.title }}"
+                data-replies='{{ c.replies|tojson }}'
+              >
+                Result
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="icon"><i class="fas fa-inbox"></i></div>
+      <h4>No complaints yet</h4>
+      <p>Raise your first grievance to see it here.</p>
+      <a class="btn btn-primary" href="{{ url_for('user_complaint') }}">Raise Complaint</a>
+    </div>
+  {% endif %}
+</section>
+
+<!-- Details Modal -->
+<div class="modal fade" id="complaintModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">Complaint</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2 text-muted small" id="modalMeta"></div>
+        <div class="mb-3" id="modalLocation"></div>
+        <div class="mb-3" id="modalDescription"></div>
+        <div class="mb-3" id="modalContact"></div>
+        <div class="row g-2" id="modalGallery"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const modalEl = document.getElementById('complaintModal');
+    if (modalEl) {
+      modalEl.addEventListener('show.bs.modal', function (event) {
+        const btn = event.relatedTarget;
+        if (!btn) return;
+        const title = btn.getAttribute('data-title') || 'Complaint';
+        const category = btn.getAttribute('data-category') || '';
+        const priority = btn.getAttribute('data-priority') || '';
+        const status = btn.getAttribute('data-status') || '';
+        const created = btn.getAttribute('data-created') || '';
+        const location = btn.getAttribute('data-location') || '';
+        const description = btn.getAttribute('data-description') || '';
+        const contact = btn.getAttribute('data-contact') || '';
+        const cid = btn.getAttribute('data-id') || '';
+        let images = [];
+        try { images = JSON.parse(btn.getAttribute('data-images') || '[]'); } catch(e) { images = []; }
+
+        modalEl.querySelector('#modalTitle').textContent = title;
+        modalEl.querySelector('#modalMeta').innerHTML = `
+          <span class="badge text-bg-info me-1">${category}</span>
+          <span class="badge text-bg-secondary me-1">${priority}</span>
+          <span class="badge text-bg-light border me-1">${status}</span>
+          <span class="text-muted">${created}</span>
+        `;
+        modalEl.querySelector('#modalLocation').innerHTML = location ? `<i class="fas fa-map-marker-alt me-1 text-danger"></i>${location}` : '';
+        modalEl.querySelector('#modalDescription').innerHTML = description ? `<h6>Description</h6><p class="mb-0">${description}</p>` : '';
+        modalEl.querySelector('#modalContact').innerHTML = contact ? `<h6>Contact</h6><p class="mb-0">${contact}</p>` : '';
+
+        const gallery = modalEl.querySelector('#modalGallery');
+        gallery.innerHTML = '';
+        images.forEach((img) => {
+          const src = `{{ url_for('static', filename='uploads/complaints') }}/${cid}/${img}`;
+          const col = document.createElement('div');
+          col.className = 'col-6 col-md-4';
+          col.innerHTML = `<a href="${src}" target="_blank" rel="noopener"><img src="${src}" class="img-fluid rounded border" alt="image"></a>`;
+          gallery.appendChild(col);
+        });
+      });
+    }
+
+    // Replies-only modal
+    const repliesModal = document.getElementById('repliesModal');
+    if (repliesModal) {
+      repliesModal.addEventListener('show.bs.modal', function (event) {
+        const btn = event.relatedTarget;
+        if (!btn) return;
+        const title = btn.getAttribute('data-title') || 'Admin Replies';
+        const cid = btn.getAttribute('data-id') || '';
+        let replies = [];
+        try { replies = JSON.parse(btn.getAttribute('data-replies') || '[]'); } catch(e) { replies = []; }
+        repliesModal.querySelector('#repliesTitle').textContent = cid ? `${title} — Result (#${cid})` : `${title} — Result`;
+        const wrap = repliesModal.querySelector('#repliesList');
+        wrap.innerHTML = '<div class="text-muted">Loading...</div>';
+
+        const renderReplies = (list) => {
+          wrap.innerHTML = '';
+          if (!list || !list.length) {
+            wrap.innerHTML = '<div class="text-muted">No replies yet.</div>';
+            return;
+          }
+          list.forEach((r) => {
+            const item = document.createElement('div');
+            item.className = 'reply-item mb-2';
+            const when = r.created_at || '';
+            const who = r.admin_username || 'Admin';
+            const textDiv = document.createElement('div');
+            textDiv.className = 'mb-1';
+            textDiv.textContent = r.message || '';
+            const metaDiv = document.createElement('div');
+            metaDiv.className = 'reply-meta';
+            metaDiv.textContent = `${who} • ${when}`;
+            item.appendChild(textDiv);
+            item.appendChild(metaDiv);
+            if (r.images && r.images.length) {
+              const row = document.createElement('div');
+              row.className = 'row g-2 mt-1 reply-gallery';
+              r.images.forEach((img) => {
+                const col = document.createElement('div');
+                col.className = 'col-4 col-md-3';
+                const src = `{{ url_for('static', filename='uploads/replies') }}/${r.id}/${img}`;
+                col.innerHTML = `<a href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="reply image"></a>`;
+                row.appendChild(col);
+              });
+              item.appendChild(row);
+            }
+            wrap.appendChild(item);
+          });
+        };
+
+        if (replies && replies.length) {
+          renderReplies(replies);
+        } else if (cid) {
+          fetch(`/user/complaints/${cid}/replies`)
+            .then(r => r.json())
+            .then(data => {
+              if (!data.success) throw new Error(data.error || 'Failed');
+              renderReplies(data.replies || []);
+            })
+            .catch(() => {
+              wrap.innerHTML = '<div class="text-danger">Failed to load replies.</div>';
+            });
+        } else {
+          renderReplies([]);
+        }
+      });
+    }
+  });
+</script>
+
+<!-- Replies Modal -->
+<div class="modal fade" id="repliesModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="repliesTitle">Admin Replies</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="repliesList" class="vstack gap-2"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+{% endblock %}

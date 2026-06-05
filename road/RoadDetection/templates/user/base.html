@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}User - Road Damage Detection{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-road"></i>
+                    <h1>Sentry<span>Road</span></h1>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item {% if request.endpoint == 'user_dashboard' %}active{% endif %}">
+                        <a href="{{ url_for('user_dashboard') }}">
+                            <i class="fas fa-home"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {% if request.endpoint == 'user_reports' %}active{% endif %}">
+                        <a href="{{ url_for('user_reports') }}">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {% if request.endpoint == 'user_complaint' %}active{% endif %}">
+                        <a href="{{ url_for('user_complaint') }}">
+                            <i class="fas fa-comment-dots"></i>
+                            <span>Complaint</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {% if request.endpoint == 'user_profile' %}active{% endif %}">
+                        <a href="{{ url_for('user_profile') }}">
+                            <i class="fas fa-user"></i>
+                            <span>Profile</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                       <img src="{{ user_avatar_url or ('https://ui-avatars.com/api/?name=' ~ (session.get('user_name', 'User')|replace(' ', '+')) ~ '&background=5D6CC0&color=fff') }}" alt="User Avatar">
+                    </div>
+                    <div class="user-info">
+                        <h4>{{ session.get('user_name', 'User') }}</h4>
+                        <p>{{ session.get('user_email', '') }}</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        // Mobile sidebar toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('sidebarToggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (toggle && sidebar) {
+                toggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                });
+            }
+
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('active')) {
+                    const isClickInside = sidebar.contains(event.target) || (toggle && toggle.contains(event.target));
+                    if (!isClickInside) {
+                        sidebar.classList.remove('active');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

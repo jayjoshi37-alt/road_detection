@@ -1,0 +1,319 @@
+{% extends "user/base.html" %}
+{% block title %}Dashboard - Road Damage Detection{% endblock %}
+{% block content %}
+    <!-- Top Header -->
+    <header class="dashboard-header">
+        <div class="header-left">
+            <h2>Dashboard</h2>
+            <p>Welcome back! Here's what's happening with road damage detection.</p>
+        </div>
+        <div class="header-right">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search...">
+            </div>
+            <div class="header-actions">
+                <button class="notification-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="user-menu-btn">
+                    <img src="{{ user_avatar_url or ('https://ui-avatars.com/api/?name=' ~ (session.get('user_name', 'User')|replace(' ', '+')) ~ '&background=5D6CC0&color=fff') }}" alt="User Avatar">
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Cards -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="statTotalDetections">--</h3>
+                    <p>Total Detections</p>
+                </div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>12%</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-road"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="statRoadsMonitored">--</h3>
+                    <p>Roads Monitored</p>
+                </div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>8%</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-hammer"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="statRepairsCompleted">--</h3>
+                    <p>Repairs Completed</p>
+                </div>
+                <div class="stat-trend down">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>5%</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="statPendingActions">--</h3>
+                    <p>Pending Actions</p>
+                </div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>15%</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Charts and Maps Section -->
+    <section class="charts-section">
+        <div class="chart-row">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Damage Types Distribution</h3>
+                    <select class="chart-filter">
+                        <option>Last 7 Days</option>
+                        <option>Last 30 Days</option>
+                        <option>Last 90 Days</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-placeholder">
+                        <div class="chart-bars chart-bars--two" id="damageTypeBars">
+                            <div class="bar" id="damageTypeBar1" style="height: 0%; background-color: #5D6CC0;" data-value="--"></div>
+                            <div class="bar" id="damageTypeBar2" style="height: 0%; background-color: #7E57C2;" data-value="--"></div>
+                        </div>
+                        <div class="chart-labels" id="damageTypeLabels">
+                            <span id="damageTypeLabel1">--</span>
+                            <span id="damageTypeLabel2">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Detections Section -->
+    <section class="recent-section">
+        <div class="section-header">
+            <h3>Recent Damage Detections</h3>
+            <a href="/user/reports" class="btn btn-primary">View All</a>
+        </div>
+        <div class="detections-table">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Location</th>
+                            <th>Type</th>
+                            <th>Severity</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if recent_complaints and recent_complaints|length > 0 %}
+                            {% for c in recent_complaints %}
+                                {% set pr = (c.priority or 'low')|lower %}
+                                {% set st = (c.status or 'New')|lower %}
+                                <tr>
+                                    <td>#RD-{{ '%04d'|format(c.id) }}</td>
+                                    <td>{{ c.location_text or '--' }}</td>
+                                    <td>{{ c.category or 'Other' }}</td>
+                                    <td><span class="badge {{ pr }}">{{ pr|title }}</span></td>
+                                    <td>{{ c.created_at }}</td>
+                                    <td>
+                                        {% if st in ['resolved','closed','completed'] %}
+                                            <span class="status completed">{{ c.status }}</span>
+                                        {% elif st in ['in progress','in-progress','in_progress','processing'] %}
+                                            <span class="status in-progress">{{ c.status }}</span>
+                                        {% else %}
+                                            <span class="status pending">{{ c.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a class="action-btn view" href="/user/reports"><i class="fas fa-eye"></i></a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" style="text-align:center; padding: 20px; color: #78909C;">No recent detections</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="actions-section">
+        <div class="section-header">
+            <h3>Quick Actions</h3>
+        </div>
+        <div class="actions-grid">
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <h4>New Detection</h4>
+                <p>Add a new road damage detection manually</p>
+                <a href="/user/complaint"><button class="btn btn-outline">Add New</button></a>
+            </div>
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-upload"></i>
+                </div>
+                <h4>Upload Images</h4>
+                <p>Upload road images for automatic detection</p>
+                <a href="/user/complaint"><button class="btn btn-outline">Upload</button></a>
+            </div>
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-file-export"></i>
+                </div>
+                <h4>See Reports</h4>
+                <p>See detailed reports on road conditions</p>
+                <a href="/user/reports"><button class="btn btn-outline">Reports</button></a>
+            </div>
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h4>Profile</h4>
+                <p>See and Edit your complete Profile</p>
+                <a href="/user/profile"><button class="btn btn-outline">Profile</button></a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        (function () {
+            const els = {
+                total: document.getElementById('statTotalDetections'),
+                roads: document.getElementById('statRoadsMonitored'),
+                repairs: document.getElementById('statRepairsCompleted'),
+                pending: document.getElementById('statPendingActions'),
+            };
+
+            const damageEls = {
+                filter: document.querySelector('.charts-section .chart-card .chart-filter'),
+                bar1: document.getElementById('damageTypeBar1'),
+                bar2: document.getElementById('damageTypeBar2'),
+                label1: document.getElementById('damageTypeLabel1'),
+                label2: document.getElementById('damageTypeLabel2'),
+            };
+
+            function setText(el, val) {
+                if (!el) return;
+                const v = (val === null || val === undefined) ? '--' : String(val);
+                if (el.textContent !== v) el.textContent = v;
+            }
+
+            async function fetchStats() {
+                try {
+                    const resp = await fetch('/user/dashboard/stats', {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' },
+                        cache: 'no-store'
+                    });
+                    const data = await resp.json();
+                    if (!resp.ok || !data.success) return;
+
+                    setText(els.total, data.total_detections);
+                    setText(els.roads, data.roads_monitored);
+                    setText(els.repairs, data.repairs_completed);
+                    setText(els.pending, data.pending_actions);
+                } catch (e) {
+                    // ignore network errors; next poll will retry
+                }
+            }
+
+            function setBar(barEl, labelEl, item) {
+                if (!barEl || !labelEl) return;
+                if (!item) {
+                    barEl.style.height = '0%';
+                    barEl.setAttribute('data-value', '--');
+                    labelEl.textContent = '--';
+                    return;
+                }
+                const pct = Math.max(0, Math.min(100, Number(item.percent || 0)));
+                barEl.style.height = pct + '%';
+                barEl.setAttribute('data-value', pct.toFixed(0) + '%');
+                labelEl.textContent = item.label || '--';
+            }
+
+            function getDaysFromFilterValue(v) {
+                const val = String(v || '').toLowerCase();
+                if (val.includes('30')) return 30;
+                if (val.includes('90')) return 90;
+                return 7;
+            }
+
+            async function fetchDamageTypes(days) {
+                try {
+                    const resp = await fetch('/user/dashboard/damage-types?days=' + encodeURIComponent(days), {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' },
+                        cache: 'no-store'
+                    });
+                    const data = await resp.json();
+                    if (!resp.ok || !data.success) return;
+
+                    const items = Array.isArray(data.items) ? data.items : [];
+                    setBar(damageEls.bar1, damageEls.label1, items[0]);
+                    setBar(damageEls.bar2, damageEls.label2, items[1]);
+                } catch (e) {
+                    // ignore network errors; next poll will retry
+                }
+            }
+
+            let timer = null;
+            function start() {
+                if (timer) return;
+                fetchStats();
+                fetchDamageTypes(getDaysFromFilterValue(damageEls.filter && damageEls.filter.value));
+                timer = setInterval(fetchStats, 7000);
+            }
+
+            function stop() {
+                if (!timer) return;
+                clearInterval(timer);
+                timer = null;
+            }
+
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden) stop();
+                else start();
+            });
+
+            if (damageEls.filter) {
+                damageEls.filter.addEventListener('change', function () {
+                    fetchDamageTypes(getDaysFromFilterValue(damageEls.filter.value));
+                });
+            }
+
+            start();
+        })();
+    </script>
+{% endblock %}

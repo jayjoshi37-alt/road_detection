@@ -1,0 +1,29 @@
+{% extends 'admin/base.html' %}
+{% block title %}Profile - SentryRoad Admin{% endblock %}
+{% block content %}
+  <section>
+    <h2 style="margin:0 0 14px;">Admin Profile</h2>
+    <div class="cards">
+      <div class="card" style="grid-column:span 12;">
+        <div class="panel">
+          <h2>Profile Image</h2>
+          <p style="color:#6b7280;margin-top:6px;">Upload a square image (JPG, PNG, GIF, WEBP). It will be shown in the sidebar.</p>
+
+          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:12px;">
+            <div>
+              {% if admin_avatar_url %}
+                <img src="{{ admin_avatar_url }}" alt="Admin Avatar" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid #e5e7eb;box-shadow:0 10px 20px rgba(0,0,0,.08)" />
+              {% else %}
+                <div style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;">A</div>
+              {% endif %}
+            </div>
+            <form method="post" enctype="multipart/form-data" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <input type="file" name="avatar" accept="image/*" required style="border:1px solid #e5e7eb;padding:8px;border-radius:10px;" />
+              <button class="btn btn-primary" type="submit"><i class="fas fa-upload"></i> Upload</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

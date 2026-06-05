@@ -1,0 +1,175 @@
+{% extends "user/base.html" %}
+{% block title %}Profile - Road Damage Detection{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="section-header">
+        <h3>Profile</h3>
+        <p>Update your profile information</p>
+    </div>
+
+    <div class="profile-grid">
+        <form action="{{ url_for('user_profile') }}" method="post" class="profile-form" enctype="multipart/form-data">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="first_name">First Name</label>
+                    <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="last_name">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" value="{{ user.email }}" readonly>
+                    <small class="help-text">Email cannot be changed</small>
+                </div>
+                <div class="form-group">
+                    <label for="organization">Organization</label>
+                    <input type="text" id="organization" name="organization" value="{{ user.organization or '' }}" placeholder="Optional">
+                </div>
+            </div>
+
+            <div class="form-divider"></div>
+
+            <h4>Profile Image</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="avatar">Upload New Image</label>
+                    <input type="file" id="avatar" name="avatar" accept="image/png, image/jpeg, image/jpg, image/gif, image/webp">
+                    <small class="help-text">PNG, JPG, GIF, WEBP up to a few MB</small>
+                </div>
+                <div class="form-group">
+                    <label>Preview</label>
+                    <div class="avatar-preview">
+                        <img id="avatarPreview" src="{{ user_avatar_url or ('https://ui-avatars.com/api/?name=' ~ (user.first_name ~ '+' ~ user.last_name) ~ '&background=5D6CC0&color=fff') }}" alt="Avatar Preview">
+                    </div>
+                </div>
+            </div>
+
+            <h4>Change Password</h4>
+            <div class="form-row">
+                <div class="form-group password-group">
+                    <label for="current_password">Current Password</label>
+                    <div class="password-input">
+                        <input type="password" id="current_password" name="current_password" placeholder="Enter current password to change it">
+                        <button type="button" class="toggle-password" data-target="current_password" aria-label="Show/Hide password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group password-group">
+                    <label for="new_password">New Password</label>
+                    <div class="password-input">
+                        <input type="password" id="new_password" name="new_password" placeholder="Leave blank to keep current password">
+                        <button type="button" class="toggle-password" data-target="new_password" aria-label="Show/Hide password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group password-group">
+                    <label for="confirm_password">Confirm New Password</label>
+                    <div class="password-input">
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Retype new password">
+                        <button type="button" class="toggle-password" data-target="confirm_password" aria-label="Show/Hide password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{{ url_for('user_dashboard') }}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+
+        <div class="profile-side">
+            <div class="profile-card">
+                <div class="avatar">
+                    <img src="{{ user_avatar_url or ('https://ui-avatars.com/api/?name=' ~ (user.first_name ~ '+' ~ user.last_name) ~ '&background=5D6CC0&color=fff') }}" alt="Avatar" />
+                </div>
+                <div class="info">
+                    <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+                    <p>{{ user.email }}</p>
+                    {% if user.organization %}
+                    <p><i class="fas fa-building"></i> {{ user.organization }}</p>
+                    {% endif %}
+                </div>
+                <div class="tips">
+                    <p><i class="fas fa-shield-alt"></i> Use a strong password with letters, numbers, and symbols.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/***** Simple responsive layout for profile page *****/
+.page-section { padding: 1rem; }
+.profile-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+.profile-form { background: #fff; border-radius: 12px; padding: 1rem; }
+.profile-side .profile-card { background: #fff; border-radius: 12px; padding: 1rem; text-align: center; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.form-group { display: flex; flex-direction: column; }
+.form-group label { font-weight: 600; margin-bottom: 0.35rem; }
+.form-group input { padding: 0.6rem 0.75rem; border: 1px solid #e0e0e0; border-radius: 8px; }
+.password-group .password-input { position: relative; display: flex; align-items: center; }
+.password-group .password-input input { width: 100%; padding-right: 2.25rem; }
+.password-group .toggle-password { position: absolute; right: 0.5rem; background: transparent; border: none; cursor: pointer; color: #666; padding: 0.25rem; }
+.password-group .toggle-password:focus { outline: none; }
+.form-divider { height: 1px; background: #eee; margin: 1rem 0; }
+.form-actions { margin-top: 0.75rem; display: flex; gap: 0.75rem; }
+.profile-card .avatar img { width: 96px; height: 96px; border-radius: 50%; }
+.profile-card .info h4 { margin: 0.75rem 0 0.25rem; }
+.profile-card .tips { margin-top: 0.75rem; font-size: 0.9rem; color: #666; }
+.avatar-preview img { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 1px solid #eee; }
+
+@media (max-width: 992px) {
+  .profile-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .form-row { grid-template-columns: 1fr; }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const input = document.getElementById('avatar');
+  const preview = document.getElementById('avatarPreview');
+  if (input && preview) {
+    input.addEventListener('change', function() {
+      const file = this.files && this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        preview.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Toggle password visibility for all toggle buttons
+  const toggles = document.querySelectorAll('.toggle-password');
+  toggles.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const targetId = this.getAttribute('data-target');
+      const field = document.getElementById(targetId);
+      if (!field) return;
+      const icon = this.querySelector('i');
+      if (field.type === 'password') {
+        field.type = 'text';
+        if (icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+      } else {
+        field.type = 'password';
+        if (icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

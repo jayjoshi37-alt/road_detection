@@ -1,0 +1,278 @@
+{% extends "user/base.html" %}
+{% block title %}Dashboard - Road Damage Detection{% endblock %}
+
+{% block content %}
+    <!-- Top Header -->
+    <header class="dashboard-header">
+        <div class="header-left">
+            <h2>Dashboard</h2>
+            <p>Welcome back! Here's what's happening with road damage detection.</p>
+        </div>
+        <div class="header-right">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search...">
+            </div>
+            <div class="header-actions">
+                <button class="notification-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="user-menu-btn">
+                    <img src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=5D6CC0&color=fff" alt="User Avatar">
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Cards -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>245</h3>
+                    <p>Total Detections</p>
+                </div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>12%</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-road"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>128</h3>
+                    <p>Roads Monitored</p>
+                </div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>8%</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-hammer"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>67</h3>
+                    <p>Repairs Completed</p>
+                </div>
+                <div class="stat-trend down">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>5%</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>42</h3>
+                    <p>Pending Actions</p>
+                </div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>15%</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Charts and Maps Section -->
+    <section class="charts-section">
+        <div class="chart-row">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Damage Types Distribution</h3>
+                    <select class="chart-filter">
+                        <option>Last 7 Days</option>
+                        <option>Last 30 Days</option>
+                        <option>Last 90 Days</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-placeholder">
+                        <div class="chart-bars">
+                            <div class="bar" style="height: 80%; background-color: #5D6CC0;" data-value="80%"></div>
+                            <div class="bar" style="height: 65%; background-color: #7E57C2;" data-value="65%"></div>
+                            <div class="bar" style="height: 45%; background-color: #FF7043;" data-value="45%"></div>
+                            <div class="bar" style="height: 30%; background-color: #78909C;" data-value="30%"></div>
+                            <div class="bar" style="height: 20%; background-color: #66BB6A;" data-value="20%"></div>
+                        </div>
+                        <div class="chart-labels">
+                            <span>Cracks</span>
+                            <span>Potholes</span>
+                            <span>Rutting</span>
+                            <span>Raveling</span>
+                            <span>Other</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Severity Levels</h3>
+                    <select class="chart-filter">
+                        <option>Last 7 Days</option>
+                        <option>Last 30 Days</option>
+                        <option>Last 90 Days</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-placeholder">
+                        <div class="pie-chart">
+                            <div class="pie-center"></div>
+                        </div>
+                        <div class="pie-legend">
+                            <div class="legend-item">
+                                <span class="color low"></span>
+                                <span>Low (35%)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="color medium"></span>
+                                <span>Medium (45%)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="color high"></span>
+                                <span>High (20%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Detections Section -->
+    <section class="recent-section">
+        <div class="section-header">
+            <h3>Recent Damage Detections</h3>
+            <a href="#" class="btn btn-primary">View All</a>
+        </div>
+        <div class="detections-table">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Location</th>
+                            <th>Type</th>
+                            <th>Severity</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#RD-0012</td>
+                            <td>Highway A1, KM 45</td>
+                            <td>Pothole</td>
+                            <td><span class="badge high">High</span></td>
+                            <td>2023-10-15</td>
+                            <td><span class="status pending">Pending</span></td>
+                            <td>
+                                <button class="action-btn view"><i class="fas fa-eye"></i></button>
+                                <button class="action-btn edit"><i class="fas fa-edit"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#RD-0011</td>
+                            <td>City Center, Main St</td>
+                            <td>Crack</td>
+                            <td><span class="badge medium">Medium</span></td>
+                            <td>2023-10-14</td>
+                            <td><span class="status in-progress">In Progress</span></td>
+                            <td>
+                                <button class="action-btn view"><i class="fas fa-eye"></i></button>
+                                <button class="action-btn edit"><i class="fas fa-edit"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#RD-0010</td>
+                            <td>North Expressway</td>
+                            <td>Rutting</td>
+                            <td><span class="badge low">Low</span></td>
+                            <td>2023-10-13</td>
+                            <td><span class="status completed">Completed</span></td>
+                            <td>
+                                <button class="action-btn view"><i class="fas fa-eye"></i></button>
+                                <button class="action-btn edit"><i class="fas fa-edit"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#RD-0009</td>
+                            <td>Industrial Zone Road</td>
+                            <td>Pothole</td>
+                            <td><span class="badge high">High</span></td>
+                            <td>2023-10-12</td>
+                            <td><span class="status pending">Pending</span></td>
+                            <td>
+                                <button class="action-btn view"><i class="fas fa-eye"></i></button>
+                                <button class="action-btn edit"><i class="fas fa-edit"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#RD-0008</td>
+                            <td>Residential Area B</td>
+                            <td>Crack</td>
+                            <td><span class="badge medium">Medium</span></td>
+                            <td>2023-10-11</td>
+                            <td><span class="status completed">Completed</span></td>
+                            <td>
+                                <button class="action-btn view"><i class="fas fa-eye"></i></button>
+                                <button class="action-btn edit"><i class="fas fa-edit"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="actions-section">
+        <div class="section-header">
+            <h3>Quick Actions</h3>
+        </div>
+        <div class="actions-grid">
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <h4>New Detection</h4>
+                <p>Add a new road damage detection manually</p>
+                <button class="btn btn-outline">Add New</button>
+            </div>
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-upload"></i>
+                </div>
+                <h4>Upload Images</h4>
+                <p>Upload road images for automatic detection</p>
+                <button class="btn btn-outline">Upload</button>
+            </div>
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-file-export"></i>
+                </div>
+                <h4>Generate Report</h4>
+                <p>Create detailed reports on road conditions</p>
+                <button class="btn btn-outline">Generate</button>
+            </div>
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-map-marked-alt"></i>
+                </div>
+                <h4>View Map</h4>
+                <p>Explore detected damages on interactive map</p>
+                <a href="{{ url_for('user_map') }}" class="btn btn-outline">Open Map</a>
+            </div>
+        </div>
+    </section>
+{% endblock %}
